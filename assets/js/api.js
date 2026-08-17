@@ -174,12 +174,14 @@ function formatarDataHora(dataHora) {
 /* =========================
    FASE DO DIA
    ========================= */
-
 function definirFaseDoDia(dataHora) {
 
-    const data = new Date(dataHora);
+    // A Open-Meteo retorna algo como:
+    // 2026-08-16T21:00
 
-    const hora = data.getHours();
+    const hora = Number(
+        dataHora.substring(11, 13)
+    );
 
     document.body.classList.remove(
         'manha',
@@ -187,7 +189,6 @@ function definirFaseDoDia(dataHora) {
         'noite',
         'madrugada'
     );
-
 
     if (hora >= 6 && hora < 12) {
 
@@ -206,6 +207,14 @@ function definirFaseDoDia(dataHora) {
         document.body.classList.add('madrugada');
 
     }
+
+    console.log(
+        `Horário: ${hora}h`
+    );
+
+    console.log(
+        `Classe aplicada: ${document.body.className}`
+    );
 }
 
 
