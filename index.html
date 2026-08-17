@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta de Clima</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Clima Atual</h1>
+        <form id="weather-form">
+            <input type="text" id="city-input" placeholder="Digite o nome da cidade..." required>
+            <button type="submit">Buscar</button>
+        </form>
+        <div id="weather-result" class="hidden">
+            <h2 id="city-name"></h2>
+            <p id="temperature"></p>
+            <p id="weather-description"></p>
+        </div>
+    </div>
+    <script src="/assets/js/api.js"></script>
+</body>
+</html>
