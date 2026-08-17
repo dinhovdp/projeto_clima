@@ -4,29 +4,87 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+
+    /* Fundo padrão */
+    background: linear-gradient(135deg, #b9dcf2, #d7ebf7);
+
     display: flex;
     justify-content: center;
     align-items: center;
+
     min-height: 100vh;
     margin: 0;
     padding: 20px;
+
+    transition:
+        background 1.5s ease,
+        color 1.5s ease;
 }
+
+/* =========================
+   FASES DO DIA
+   ========================= */
+
+/* 06:00 - 12:00 */
+body.manha {
+    background: linear-gradient(135deg, #b8dced, #d9edf7);
+}
+
+/* 12:00 - 18:00 */
+body.tarde {
+    background: linear-gradient(135deg, #f2dda1, #f8edc5);
+}
+
+/* 18:00 - 00:00 */
+body.noite {
+    background: linear-gradient(135deg, #344d6b, #506b8a);
+}
+
+/* 00:00 - 06:00 */
+body.madrugada {
+    background: linear-gradient(135deg, #514b6f, #6d6389);
+}
+
+
+/* =========================
+   CARD PRINCIPAL
+   ========================= */
 
 .container {
-    background: white;
-    padding: 24px 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.94);
+
+    padding: 28px 30px;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.15);
+
     width: 100%;
-    max-width: 340px;
+    max-width: 380px;
+
     text-align: center;
+
+    transition:
+        background 1.5s ease,
+        box-shadow 1.5s ease;
 }
 
+
+/* =========================
+   TÍTULO
+   ========================= */
+
 h1 {
-    font-size: 1.4rem;
-    margin-bottom: 20px;
+    font-size: 1.6rem;
+    margin-top: 0;
+    margin-bottom: 22px;
 }
+
+
+/* =========================
+   FORMULÁRIO
+   ========================= */
 
 form {
     display: flex;
@@ -36,25 +94,48 @@ form {
 
 input {
     width: 100%;
-    padding: 10px;
+
+    padding: 12px;
+
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px;
+
     font-size: 1rem;
+
+    outline: none;
+
+    transition: border-color 0.2s ease;
+}
+
+input:focus {
+    border-color: #007bff;
 }
 
 button {
-    padding: 10px 15px;
-    background-color: #007BFF;
+    padding: 12px 15px;
+
+    background-color: #007bff;
     color: white;
+
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
+
     cursor: pointer;
+
     font-size: 1rem;
-    transition: background-color 0.2s ease;
+    font-weight: bold;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.1s ease;
 }
 
 button:hover {
     background-color: #0056b3;
+}
+
+button:active {
+    transform: scale(0.98);
 }
 
 button:disabled {
@@ -62,48 +143,126 @@ button:disabled {
     cursor: not-allowed;
 }
 
+
+/* =========================
+   CARREGAMENTO / ERRO
+   ========================= */
+
 #loading {
-    margin-top: 14px;
+    margin-top: 16px;
     color: #555;
 }
 
 .erro {
-    margin-top: 14px;
+    margin-top: 16px;
     color: #c0392b;
     font-weight: bold;
 }
 
+
+/* =========================
+   RESULTADO
+   ========================= */
+
 #weather-result {
-    margin-top: 20px;
-    text-align: left;
+    margin-top: 24px;
+    text-align: center;
 }
 
 #weather-result h2 {
-    text-align: center;
     margin-bottom: 8px;
 }
 
 #weather-result p {
-    margin: 6px 0;
+    margin: 8px 0;
 }
 
-#temperature {
-    font-size: 1.6rem;
-    font-weight: bold;
-    text-align: center;
+
+/* Ícone do clima */
+
+#weather-icon {
+    font-size: 4rem;
+    margin: 5px 0 10px;
 }
+
+
+/* Temperatura */
+
+#temperature {
+    font-size: 2.4rem;
+    font-weight: bold;
+
+    margin: 8px 0;
+}
+
+
+/* Descrição */
+
+#weather-description {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+
+/* Vento */
+
+#wind {
+    color: #555;
+}
+
+
+/* Data */
+
+#updated-at {
+    font-size: 0.85rem;
+    color: #777;
+
+    margin-top: 18px !important;
+}
+
+
+/* =========================
+   CLIMA EM PERÍODOS ESCUROS
+   ========================= */
+
+body.noite .container,
+body.madrugada .container {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+
+/* =========================
+   ELEMENTO OCULTO
+   ========================= */
 
 .hidden {
     display: none;
 }
 
-/* Ajustes para telas pequenas (mobile) */
+
+/* =========================
+   RESPONSIVIDADE
+   ========================= */
+
 @media (max-width: 400px) {
+
+    body {
+        padding: 15px;
+    }
+
     .container {
-        padding: 18px 16px;
+        padding: 22px 18px;
     }
 
     h1 {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
+    }
+
+    #temperature {
+        font-size: 2.1rem;
+    }
+
+    #weather-icon {
+        font-size: 3.5rem;
     }
 }
