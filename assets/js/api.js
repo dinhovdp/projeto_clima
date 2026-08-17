@@ -293,9 +293,7 @@ form.addEventListener('submit', async (e) => {
            ========================= */
 
         const respostaClima = await fetch(
-
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=America%2FSao_Paulo`
         );
 
 
