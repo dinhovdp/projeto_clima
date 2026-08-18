@@ -2,27 +2,54 @@
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Consulta de Clima</title>
 
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link
+        rel="stylesheet"
+        href="/assets/css/style.css"
+    >
+
 </head>
+
 
 <body>
 
-    <!-- Controle de tema -->
+    <!-- =========================
+         CONTROLE DE TEMA
+         ========================= -->
+
     <div class="theme-container">
-        <button id="theme-toggle" type="button">
+
+        <button
+            id="theme-toggle"
+            type="button"
+        >
             🌙 Modo escuro
         </button>
+
     </div>
 
-    <!-- Área principal do clima -->
-    <div class="container">
+
+    <!-- =========================
+         ÁREA PRINCIPAL
+         ========================= -->
+
+    <main class="container">
 
         <h1>Clima Atual</h1>
+
+
+        <!-- =========================
+             FORMULÁRIO
+             ========================= -->
 
         <form id="weather-form">
 
@@ -30,6 +57,7 @@
                 type="text"
                 id="city-input"
                 placeholder="Digite o nome da cidade..."
+                autocomplete="off"
                 required
             >
 
@@ -39,31 +67,309 @@
 
         </form>
 
-        <p id="loading" class="hidden">
+
+        <!-- =========================
+             CARREGAMENTO
+             ========================= -->
+
+        <p
+            id="loading"
+            class="hidden"
+        >
             Buscando...
         </p>
 
-        <p id="error-message" class="hidden erro"></p>
 
-        <div id="weather-result" class="hidden">
+        <!-- =========================
+             ERRO
+             ========================= -->
 
-    <h2 id="city-name"></h2>
+        <p
+            id="error-message"
+            class="hidden erro"
+        ></p>
 
-    <p id="local-time"></p>
 
-    <p id="temperature"></p>
+        <!-- =========================
+             RESULTADO
+             ========================= -->
 
-    <p id="weather-description"></p>
+        <section
+            id="weather-result"
+            class="hidden"
+        >
 
-    <p id="wind"></p>
+            <!-- =========================
+                 INFORMAÇÕES PRINCIPAIS
+                 ========================= -->
 
-    <p id="updated-at"></p>
+            <div class="weather-main">
 
-</div>
+                <h2 id="city-name"></h2>
 
-    </div>
+                <p id="local-time"></p>
+
+                <div
+                    id="weather-icon"
+                    class="weather-icon"
+                    aria-label="Ícone do clima"
+                >
+                </div>
+
+                <p id="temperature"></p>
+
+                <p id="weather-description"></p>
+
+            </div>
+
+
+            <!-- =========================
+                 DETALHES DO CLIMA
+                 ========================= -->
+
+            <div class="weather-details">
+
+                <div class="weather-detail">
+
+                    <span>
+                        Sensação térmica
+                    </span>
+
+                    <strong id="feels-like">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="weather-detail">
+
+                    <span>
+                        Umidade
+                    </span>
+
+                    <strong id="humidity">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="weather-detail">
+
+                    <span>
+                        Vento
+                    </span>
+
+                    <strong id="wind">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 ATUALIZAÇÃO
+                 ========================= -->
+
+            <p id="updated-at"></p>
+
+
+            <!-- =========================
+                 AÇÕES
+                 ========================= -->
+
+            <div class="weather-actions">
+
+                <button
+                    type="button"
+                    id="add-comparison-button"
+                >
+                    ➕ Adicionar à comparação
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 PREVISÃO DE 7 DIAS
+                 ========================= -->
+
+            <section
+                id="forecast-section"
+                class="forecast-section hidden"
+            >
+
+                <div class="forecast-header">
+
+                    <h2>
+                        Previsão para os próximos 7 dias
+                    </h2>
+
+                </div>
+
+
+                <div
+                    id="forecast-container"
+                    class="forecast-container"
+                >
+
+                    <!--
+                        Os cards dos próximos
+                        7 dias serão criados
+                        pelo JavaScript.
+                    -->
+
+                </div>
+
+            </section>
+
+
+        </section>
+
+
+        <!-- =========================
+             COMPARAÇÃO DE CIDADES
+             ========================= -->
+
+        <section
+            id="comparison-section"
+            class="comparison-section hidden"
+        >
+
+            <div class="comparison-header">
+
+                <h2>
+                    Comparação de cidades
+                </h2>
+
+                <button
+                    type="button"
+                    id="clear-comparison-button"
+                >
+                    Limpar comparação
+                </button>
+
+            </div>
+
+
+            <p class="comparison-info">
+                Compare até 5 cidades.
+            </p>
+
+
+            <div
+                id="comparison-container"
+                class="comparison-container"
+            >
+
+                <!--
+                    Os cards das cidades
+                    serão criados pelo JavaScript.
+                -->
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+         ========================= -->
+
+    <!--
+        A ordem dos arquivos é importante.
+        Cada arquivo utiliza funções dos
+        arquivos carregados anteriormente.
+    -->
 
     <script src="/assets/js/api.js"></script>
+
+    
+
+    <script src="/assets/js/forecast.js"></script>
+
+    <script src="/assets/js/comparison.js"></script>
+
+   
+
+
+    <!-- =========================
+         CONTROLES DA INTERFACE
+         ========================= -->
+
+    <script>
+
+        /*
+         * Botão para adicionar a cidade
+         * atualmente pesquisada à comparação.
+         */
+
+        const addComparisonButton =
+            document.getElementById(
+                'add-comparison-button'
+            );
+
+
+        if (addComparisonButton) {
+
+            addComparisonButton.addEventListener(
+                'click',
+                () => {
+
+                    if (
+                        typeof adicionarClimaAtualNaComparacao ===
+                        'function'
+                    ) {
+
+                        adicionarClimaAtualNaComparacao();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /*
+         * Botão para limpar todas
+         * as cidades da comparação.
+         */
+
+        const clearComparisonButton =
+            document.getElementById(
+                'clear-comparison-button'
+            );
+
+
+        if (clearComparisonButton) {
+
+            clearComparisonButton.addEventListener(
+                'click',
+                () => {
+
+                    if (
+                        typeof limparComparacao ===
+                        'function'
+                    ) {
+
+                        limparComparacao();
+
+                    }
+
+                }
+            );
+
+        }
+
+    </script>
+
 
 </body>
 

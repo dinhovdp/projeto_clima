@@ -2,7 +2,6 @@ const form = document.getElementById('weather-form');
 const cityInput = document.getElementById('city-input');
 const themeToggle = document.getElementById('theme-toggle');
 
-
 const loadingEl = document.getElementById('loading');
 const errorEl = document.getElementById('error-message');
 const resultDiv = document.getElementById('weather-result');
@@ -48,6 +47,24 @@ function limparMensagens() {
     errorEl.textContent = '';
 
     resultDiv.classList.add('hidden');
+
+    /*
+       Esconde a previsão anterior
+       enquanto uma nova cidade
+       está sendo pesquisada.
+    */
+
+    const forecastSection =
+        document.getElementById(
+            'forecast-section'
+        );
+
+    if (forecastSection) {
+
+        forecastSection.classList.add(
+            'hidden'
+        );
+    }
 }
 
 
@@ -103,6 +120,7 @@ function obterDescricaoClima(codigo) {
 
     };
 
+
     return descricoes[codigo] ||
         'Condição climática desconhecida';
 }
@@ -119,50 +137,75 @@ function obterIconeClima(codigo, isDay) {
         return isDay ? '☀️' : '🌙';
     }
 
+
     if (codigo === 1) {
 
         return isDay ? '🌤️' : '🌙';
     }
+
 
     if (codigo === 2) {
 
         return isDay ? '⛅' : '☁️';
     }
 
+
     if (codigo === 3) {
 
         return '☁️';
     }
 
-    if (codigo === 45 || codigo === 48) {
+
+    if (
+        codigo === 45 ||
+        codigo === 48
+    ) {
 
         return '🌫️';
     }
 
-    if (codigo >= 51 && codigo <= 55) {
+
+    if (
+        codigo >= 51 &&
+        codigo <= 55
+    ) {
 
         return '🌦️';
     }
 
-    if (codigo >= 61 && codigo <= 65) {
+
+    if (
+        codigo >= 61 &&
+        codigo <= 65
+    ) {
 
         return '🌧️';
     }
 
-    if (codigo >= 71 && codigo <= 75) {
+
+    if (
+        codigo >= 71 &&
+        codigo <= 75
+    ) {
 
         return '❄️';
     }
 
-    if (codigo >= 80 && codigo <= 82) {
+
+    if (
+        codigo >= 80 &&
+        codigo <= 82
+    ) {
 
         return '🌦️';
     }
+
 
     if (codigo >= 95) {
 
         return '⛈️';
     }
+
 
     return '🌤️';
 }
@@ -173,11 +216,11 @@ function obterIconeClima(codigo, isDay) {
    ========================= */
 
 /*
-   Recebe um horário no formato:
+   Recebe:
 
    2026-08-17T12:45
 
-   e retorna somente:
+   Retorna:
 
    12:45
 */
@@ -211,17 +254,6 @@ function obterHorarioAtual() {
 
 function definirFaseDoDia(dataHora) {
 
-    /*
-       O horário utilizado aqui é o horário
-       da cidade pesquisada.
-
-       Exemplo:
-
-       Tóquio → 21h → noite
-       Londres → 10h → manhã
-       São Paulo → 15h → tarde
-    */
-
     const hora = Number(
         dataHora.substring(11, 13)
     );
@@ -235,19 +267,28 @@ function definirFaseDoDia(dataHora) {
     );
 
 
-    if (hora >= 6 && hora < 12) {
+    if (
+        hora >= 6 &&
+        hora < 12
+    ) {
 
         document.body.classList.add(
             'manha'
         );
 
-    } else if (hora >= 12 && hora < 18) {
+    } else if (
+        hora >= 12 &&
+        hora < 18
+    ) {
 
         document.body.classList.add(
             'tarde'
         );
 
-    } else if (hora >= 18 && hora < 24) {
+    } else if (
+        hora >= 18 &&
+        hora < 24
+    ) {
 
         document.body.classList.add(
             'noite'
@@ -265,9 +306,305 @@ function definirFaseDoDia(dataHora) {
         `Horário da cidade: ${hora}h`
     );
 
+
     console.log(
         `Classe aplicada: ${document.body.className}`
     );
+}
+
+
+/* =========================
+   CACHE
+   ========================= */
+
+/*
+   O cache permanece válido
+   durante 10 minutos.
+
+   10 minutos =
+   10 × 60 × 1000
+*/
+
+const CACHE_TEMPO =
+    10 * 60 * 1000;
+
+
+/*
+   Cria uma chave específica
+   para cada cidade.
+*/
+
+function criarChaveCache(cidade) {
+
+    return `clima_${cidade
+        .trim()
+        .toLowerCase()}`;
+}
+
+
+/*
+   Salva:
+
+   - cidade
+   - clima atual
+   - previsão de 7 dias
+*/
+
+function salvarCache(
+    cidade,
+    dados
+) {
+
+    const cache = {
+
+        dados: dados,
+
+        timestamp: Date.now()
+
+    };
+
+
+    localStorage.setItem(
+
+        criarChaveCache(cidade),
+
+        JSON.stringify(cache)
+
+    );
+}
+
+
+/*
+   Recupera o cache.
+
+   Retorna null quando:
+
+   - não existe;
+   - está expirado;
+   - ocorreu erro ao ler.
+*/
+
+function obterCache(cidade) {
+
+    const dadosSalvos =
+        localStorage.getItem(
+            criarChaveCache(cidade)
+        );
+
+
+    if (!dadosSalvos) {
+
+        return null;
+    }
+
+
+    try {
+
+        const cache =
+            JSON.parse(dadosSalvos);
+
+
+        const cacheExpirado =
+            Date.now() -
+            cache.timestamp >
+            CACHE_TEMPO;
+
+
+        if (cacheExpirado) {
+
+            localStorage.removeItem(
+                criarChaveCache(cidade)
+            );
+
+            return null;
+        }
+
+
+        return cache.dados;
+
+    } catch (erro) {
+
+        console.error(
+            'Erro ao ler cache:',
+            erro
+        );
+
+
+        localStorage.removeItem(
+            criarChaveCache(cidade)
+        );
+
+
+        return null;
+    }
+}
+
+
+/* =========================
+   EXIBIR DADOS DO CLIMA
+   ========================= */
+
+function exibirDadosClima(
+    cidadeEncontrada,
+    climaAtual
+) {
+
+    /*
+       Guarda os dados da cidade atualmente
+       exibida na tela.
+
+       O comparison.js utiliza essas
+       informações para adicionar a cidade
+       à comparação.
+    */
+
+    climaAtualPesquisado = {
+
+        cidade: cidadeEncontrada,
+
+        clima: climaAtual
+
+    };
+
+
+    cityNameEl.textContent =
+        `${cidadeEncontrada.name}${
+            cidadeEncontrada.country
+                ? ', ' +
+                  cidadeEncontrada.country
+                : ''
+        }`;
+
+    
+    /*
+       Horário da cidade pesquisada.
+    */
+
+    localTimeEl.textContent =
+        `Horário destino: ${
+            formatarHorarioLocal(
+                climaAtual.time
+            )
+        }`;
+
+
+    tempEl.textContent =
+        `${climaAtual.temperature} °C`;
+
+
+    descEl.textContent =
+        `${obterIconeClima(
+            climaAtual.weathercode,
+            climaAtual.is_day
+        )} ${
+            obterDescricaoClima(
+                climaAtual.weathercode
+            )
+        }`;
+
+
+    windEl.textContent =
+        `💨 Vento: ${
+            climaAtual.windspeed
+        } km/h ` +
+        `(direção ${
+            climaAtual.winddirection
+        }°)`;
+
+
+    /*
+       Horário local do usuário.
+    */
+
+    updatedAtEl.textContent =
+        `Atualizado em: ${
+            obterHorarioAtual()
+        }`;
+
+
+    /*
+       Altera o ambiente da aplicação
+       conforme o horário da cidade.
+    */
+
+    definirFaseDoDia(
+        climaAtual.time
+    );
+
+
+    resultDiv.classList.remove(
+        'hidden'
+    );
+}
+
+
+/* =========================
+   BUSCAR PREVISÃO
+   ========================= */
+
+async function buscarPrevisao(
+    latitude,
+    longitude
+) {
+
+    const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+
+
+    const resposta =
+        await fetch(url);
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            'Erro ao consultar a previsão para os próximos 7 dias.'
+        );
+    }
+
+
+    const dados =
+        await resposta.json();
+
+
+    if (
+        !dados.daily ||
+        !dados.daily.time ||
+        !dados.daily.temperature_2m_max ||
+        !dados.daily.temperature_2m_min ||
+        !dados.daily.weathercode
+    ) {
+
+        throw new Error(
+            'Formato de previsão inválido.'
+        );
+    }
+
+
+    /*
+       A função abaixo pertence
+       ao arquivo forecast.js.
+
+       Ela cria e exibe os
+       cards da previsão.
+    */
+
+    if (
+        typeof exibirPrevisao ===
+        'function'
+    ) {
+
+        exibirPrevisao(dados);
+
+    } else {
+
+        console.error(
+            'A função exibirPrevisao não foi encontrada.'
+        );
+    }
+
+
+    return dados;
 }
 
 
@@ -304,16 +641,137 @@ form.addEventListener(
         try {
 
             /* =========================
-               1. GEOCODIFICAÇÃO
+               1. VERIFICA O CACHE
+               ========================= */
+
+            const dadosCache =
+                obterCache(cidade);
+
+
+            /*
+               Se existir cache válido,
+               utiliza os dados armazenados.
+            */
+
+            if (dadosCache) {
+
+                console.log(
+                    `Cache utilizado para: ${cidade}`
+                );
+
+
+                exibirDadosClima(
+
+                    dadosCache.cidadeEncontrada,
+
+                    dadosCache.climaAtual
+
+                );
+
+
+                /*
+                   A previsão também fica
+                   armazenada no cache.
+
+                   Porém, existe compatibilidade
+                   com caches antigos que ainda
+                   não possuem previsão.
+                */
+
+                if (
+                    dadosCache.previsao
+                ) {
+
+                    if (
+                        typeof exibirPrevisao ===
+                        'function'
+                    ) {
+
+                        exibirPrevisao(
+                            dadosCache.previsao
+                        );
+                    }
+
+                } else {
+
+                    /*
+                       Cache antigo.
+
+                       Busca apenas a previsão
+                       e atualiza o cache.
+                    */
+
+                    try {
+
+                        const previsao =
+                            await buscarPrevisao(
+
+                                dadosCache
+                                    .cidadeEncontrada
+                                    .latitude,
+
+                                dadosCache
+                                    .cidadeEncontrada
+                                    .longitude
+
+                            );
+
+
+                        salvarCache(
+
+                            cidade,
+
+                            {
+
+                                cidadeEncontrada:
+                                    dadosCache
+                                        .cidadeEncontrada,
+
+                                climaAtual:
+                                    dadosCache
+                                        .climaAtual,
+
+                                previsao:
+                                    previsao
+
+                            }
+
+                        );
+
+                    } catch (erro) {
+
+                        console.error(
+                            'Erro ao atualizar previsão:',
+                            erro
+                        );
+                    }
+                }
+
+
+                return;
+            }
+
+
+            console.log(
+                `Cache não encontrado ou expirado: ${cidade}`
+            );
+
+
+            /* =========================
+               2. GEOCODIFICAÇÃO
                ========================= */
 
             const respostaLocalizacao =
                 await fetch(
+
                     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`
+
                 );
 
 
-            if (!respostaLocalizacao.ok) {
+            if (
+                !respostaLocalizacao.ok
+            ) {
 
                 throw new Error(
                     'Erro ao consultar a localização.'
@@ -346,17 +804,20 @@ form.addEventListener(
             const latitude =
                 cidadeEncontrada.latitude;
 
+
             const longitude =
                 cidadeEncontrada.longitude;
 
 
             /* =========================
-               2. CONSULTA DO CLIMA
+               3. CONSULTA DO CLIMA ATUAL
                ========================= */
 
             const respostaClima =
                 await fetch(
+
                     `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
+
                 );
 
 
@@ -376,82 +837,75 @@ form.addEventListener(
                 dadosClima.current_weather;
 
 
-            /* =========================
-               3. ATUALIZA A INTERFACE
-               ========================= */
+            if (!climaAtual) {
 
-            cityNameEl.textContent =
-                `${cidadeEncontrada.name}${
-                    cidadeEncontrada.country
-                        ? ', ' +
-                          cidadeEncontrada.country
-                        : ''
-                }`;
-
-
-            /*
-               Horário da cidade pesquisada.
-            */
-
-            localTimeEl.textContent =
-                `Horário destino: ${
-                    formatarHorarioLocal(
-                        climaAtual.time
-                    )
-                }`;
-
-
-            tempEl.textContent =
-                `${climaAtual.temperature} °C`;
-
-
-            descEl.textContent =
-                `${obterIconeClima(
-                    climaAtual.weathercode,
-                    climaAtual.is_day
-                )} ${
-                    obterDescricaoClima(
-                        climaAtual.weathercode
-                    )
-                }`;
-
-
-            windEl.textContent =
-                `💨 Vento: ${
-                    climaAtual.windspeed
-                } km/h ` +
-                `(direção ${
-                    climaAtual.winddirection
-                }°)`;
-
-
-            /*
-               Horário local do usuário.
-            */
-
-            updatedAtEl.textContent =
-                `Atualizado em: ${
-                    obterHorarioAtual()
-                }`;
+                throw new Error(
+                    'Dados do clima atual não encontrados.'
+                );
+            }
 
 
             /* =========================
-               4. ALTERA O FUNDO
+               4. CONSULTA PREVISÃO
                ========================= */
 
+            const previsao =
+                await buscarPrevisao(
+
+                    latitude,
+
+                    longitude
+
+                );
+
+
+            /* =========================
+               5. SALVA NO CACHE
+               ========================= */
+
+            salvarCache(
+
+                cidade,
+
+                {
+
+                    cidadeEncontrada:
+                        cidadeEncontrada,
+
+                    climaAtual:
+                        climaAtual,
+
+                    previsao:
+                        previsao
+
+                }
+
+            );
+
+
+            console.log(
+                `Dados atuais e previsão salvos no cache: ${cidade}`
+            );
+
+
+            /* =========================
+               6. ATUALIZA CLIMA ATUAL
+               ========================= */
+
+            exibirDadosClima(
+
+                cidadeEncontrada,
+
+                climaAtual
+
+            );
+
+
             /*
-               O fundo será definido de acordo
-               com o horário da cidade pesquisada.
+               A previsão já foi exibida
+               pela função buscarPrevisao().
             */
 
-            definirFaseDoDia(
-                climaAtual.time
-            );
-
-
-            resultDiv.classList.remove(
-                'hidden'
-            );
 
         } catch (erro) {
 
@@ -470,6 +924,7 @@ form.addEventListener(
 
             mostrarCarregando(false);
         }
+
     }
 );
 
@@ -501,5 +956,6 @@ themeToggle.addEventListener(
             themeToggle.textContent =
                 '🌙 Modo escuro';
         }
+
     }
 );
