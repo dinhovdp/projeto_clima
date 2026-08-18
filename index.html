@@ -22,9 +22,9 @@
 
 <body>
 
-    <!-- =========================
+    <!-- =====================================================
          CONTROLE DE TEMA
-         ========================= -->
+         ===================================================== -->
 
     <div class="theme-container">
 
@@ -38,20 +38,24 @@
     </div>
 
 
-    <!-- =========================
-         ÁREA PRINCIPAL
-         ========================= -->
+    <!-- =====================================================
+         CONTAINER PRINCIPAL
+         ===================================================== -->
 
     <main class="container">
 
-        <h1>Clima Atual</h1>
+        <h1>
+            Clima Atual
+        </h1>
 
 
-        <!-- =========================
-             FORMULÁRIO
-             ========================= -->
+        <!-- =================================================
+             FORMULÁRIO DE PESQUISA
+             ================================================= -->
 
-        <form id="weather-form">
+        <form
+            id="weather-form"
+        >
 
             <input
                 type="text"
@@ -61,28 +65,31 @@
                 required
             >
 
-            <button type="submit">
+
+            <button
+                type="submit"
+            >
                 Buscar
             </button>
 
         </form>
 
 
-        <!-- =========================
+        <!-- =================================================
              CARREGAMENTO
-             ========================= -->
+             ================================================= -->
 
         <p
             id="loading"
             class="hidden"
         >
-            Buscando...
+            Buscando informações do clima...
         </p>
 
 
-        <!-- =========================
-             ERRO
-             ========================= -->
+        <!-- =================================================
+             MENSAGEM DE ERRO
+             ================================================= -->
 
         <p
             id="error-message"
@@ -90,102 +97,144 @@
         ></p>
 
 
-        <!-- =========================
-             RESULTADO
-             ========================= -->
+        <!-- =================================================
+             RESULTADO DO CLIMA
+             ================================================= -->
 
         <section
             id="weather-result"
             class="hidden"
         >
 
-            <!-- =========================
-                 INFORMAÇÕES PRINCIPAIS
-                 ========================= -->
+            <!-- =============================================
+                 CIDADE
+                 ============================================= -->
 
-            <div class="weather-main">
+            <h2
+                id="city-name"
+            ></h2>
 
-                <h2 id="city-name"></h2>
 
-                <p id="local-time"></p>
+            <!-- =============================================
+                 HORÁRIO LOCAL DA CIDADE
+                 ============================================= -->
+
+            <p
+                id="local-time"
+            ></p>
+
+
+            <!-- =============================================
+                 ÍCONE / DESCRIÇÃO
+                 ============================================= -->
+
+            <p
+                id="weather-description"
+            ></p>
+
+
+            <!-- =============================================
+                 TEMPERATURA
+                 ============================================= -->
+
+            <p
+                id="temperature"
+            ></p>
+
+
+            <!-- =============================================
+                 INFORMAÇÕES COMPLEMENTARES
+                 ============================================= -->
+
+            <div
+                class="weather-details"
+            >
+
+                <!-- =========================================
+                     SENSAÇÃO TÉRMICA
+                     ========================================= -->
 
                 <div
-                    id="weather-icon"
-                    class="weather-icon"
-                    aria-label="Ícone do clima"
+                    class="weather-detail"
                 >
+
+                    <span>
+                        🌡️
+                    </span>
+
+                    <p
+                        id="feels-like"
+                    >
+                        Sensação térmica: --
+                    </p>
+
                 </div>
 
-                <p id="temperature"></p>
 
-                <p id="weather-description"></p>
+                <!-- =========================================
+                     UMIDADE
+                     ========================================= -->
+
+                <div
+                    class="weather-detail"
+                >
+
+                    <span>
+                        💧
+                    </span>
+
+                    <p
+                        id="humidity"
+                    >
+                        Umidade: --
+                    </p>
+
+                </div>
+
+
+                <!-- =========================================
+                     VENTO
+                     ========================================= -->
+
+                <div
+                    class="weather-detail"
+                >
+
+                    <span>
+                        💨
+                    </span>
+
+                    <p
+                        id="wind"
+                    >
+                        Vento: --
+                    </p>
+
+                </div>
 
             </div>
 
 
-            <!-- =========================
-                 DETALHES DO CLIMA
-                 ========================= -->
-
-            <div class="weather-details">
-
-                <div class="weather-detail">
-
-                    <span>
-                        Sensação térmica
-                    </span>
-
-                    <strong id="feels-like">
-                        --
-                    </strong>
-
-                </div>
-
-
-                <div class="weather-detail">
-
-                    <span>
-                        Umidade
-                    </span>
-
-                    <strong id="humidity">
-                        --
-                    </strong>
-
-                </div>
-
-
-                <div class="weather-detail">
-
-                    <span>
-                        Vento
-                    </span>
-
-                    <strong id="wind">
-                        --
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================
+            <!-- =============================================
                  ATUALIZAÇÃO
-                 ========================= -->
+                 ============================================= -->
 
-            <p id="updated-at"></p>
+            <p
+                id="updated-at"
+            ></p>
 
 
-            <!-- =========================
-                 AÇÕES
-                 ========================= -->
+            <!-- =============================================
+                 BOTÃO DE COMPARAÇÃO
+                 ============================================= -->
 
-            <div class="weather-actions">
+            <div
+                class="comparison-action"
+            >
 
                 <button
+                    id="add-comparison"
                     type="button"
-                    id="add-comparison-button"
                 >
                     ➕ Adicionar à comparação
                 </button>
@@ -193,16 +242,18 @@
             </div>
 
 
-            <!-- =========================
+            <!-- =============================================
                  PREVISÃO DE 7 DIAS
-                 ========================= -->
+                 ============================================= -->
 
             <section
                 id="forecast-section"
                 class="forecast-section hidden"
             >
 
-                <div class="forecast-header">
+                <div
+                    class="forecast-header"
+                >
 
                     <h2>
                         Previsão para os próximos 7 dias
@@ -217,9 +268,9 @@
                 >
 
                     <!--
-                        Os cards dos próximos
-                        7 dias serão criados
-                        pelo JavaScript.
+                        Os cards são criados
+                        dinamicamente pelo
+                        forecast.js.
                     -->
 
                 </div>
@@ -227,148 +278,79 @@
             </section>
 
 
-        </section>
+            <!-- =============================================
+                 COMPARAÇÃO DE CIDADES
+                 ============================================= -->
 
-
-        <!-- =========================
-             COMPARAÇÃO DE CIDADES
-             ========================= -->
-
-        <section
-            id="comparison-section"
-            class="comparison-section hidden"
-        >
-
-            <div class="comparison-header">
-
-                <h2>
-                    Comparação de cidades
-                </h2>
-
-                <button
-                    type="button"
-                    id="clear-comparison-button"
-                >
-                    Limpar comparação
-                </button>
-
-            </div>
-
-
-            <p class="comparison-info">
-                Compare até 5 cidades.
-            </p>
-
-
-            <div
-                id="comparison-container"
-                class="comparison-container"
+            <section
+                id="comparison-section"
+                class="comparison-section hidden"
             >
 
-                <!--
-                    Os cards das cidades
-                    serão criados pelo JavaScript.
-                -->
+                <div
+                    class="comparison-header"
+                >
 
-            </div>
+                    <h2>
+                        Comparação de cidades
+                    </h2>
+
+                    <p>
+                        Compare até 5 cidades
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="comparison-container"
+                    class="comparison-container"
+                >
+
+                    <!--
+                        Os mini cards serão
+                        criados pelo
+                        comparison.js.
+                    -->
+
+                </div>
+
+            </section>
 
         </section>
-
 
     </main>
 
 
-    <!-- =========================
+    <!-- =====================================================
+         NOTIFICAÇÃO
+         ===================================================== -->
+
+    <div
+        id="weather-toast"
+        class="weather-toast"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+
+    <!-- =====================================================
          JAVASCRIPT
-         ========================= -->
+         ===================================================== -->
 
-    <!--
-        A ordem dos arquivos é importante.
-        Cada arquivo utiliza funções dos
-        arquivos carregados anteriormente.
-    -->
-
-    <script src="/assets/js/api.js"></script>
-
-    
-
-    <script src="/assets/js/forecast.js"></script>
-
-    <script src="/assets/js/comparison.js"></script>
-
-   
+    <script
+        src="/assets/js/api.js"
+    ></script>
 
 
-    <!-- =========================
-         CONTROLES DA INTERFACE
-         ========================= -->
-
-    <script>
-
-        /*
-         * Botão para adicionar a cidade
-         * atualmente pesquisada à comparação.
-         */
-
-        const addComparisonButton =
-            document.getElementById(
-                'add-comparison-button'
-            );
+    <script
+        src="/assets/js/forecast.js"
+    ></script>
 
 
-        if (addComparisonButton) {
-
-            addComparisonButton.addEventListener(
-                'click',
-                () => {
-
-                    if (
-                        typeof adicionarClimaAtualNaComparacao ===
-                        'function'
-                    ) {
-
-                        adicionarClimaAtualNaComparacao();
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        /*
-         * Botão para limpar todas
-         * as cidades da comparação.
-         */
-
-        const clearComparisonButton =
-            document.getElementById(
-                'clear-comparison-button'
-            );
-
-
-        if (clearComparisonButton) {
-
-            clearComparisonButton.addEventListener(
-                'click',
-                () => {
-
-                    if (
-                        typeof limparComparacao ===
-                        'function'
-                    ) {
-
-                        limparComparacao();
-
-                    }
-
-                }
-            );
-
-        }
-
-    </script>
+    <script
+        src="/assets/js/comparison.js"
+    ></script>
 
 
 </body>
