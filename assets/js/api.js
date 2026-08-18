@@ -1,5 +1,7 @@
 const form = document.getElementById('weather-form');
 const cityInput = document.getElementById('city-input');
+const themeToggle = document.getElementById('theme-toggle');
+
 
 const loadingEl = document.getElementById('loading');
 const errorEl = document.getElementById('error-message');
@@ -7,6 +9,8 @@ const resultDiv = document.getElementById('weather-result');
 
 const cityNameEl = document.getElementById('city-name');
 const tempEl = document.getElementById('temperature');
+const localTimeEl = document.getElementById('local-time');
+
 const descEl = document.getElementById('weather-description');
 const windEl = document.getElementById('wind');
 const updatedAtEl = document.getElementById('updated-at');
@@ -17,7 +21,11 @@ const updatedAtEl = document.getElementById('updated-at');
    ========================= */
 
 function mostrarCarregando(mostrar) {
-    loadingEl.classList.toggle('hidden', !mostrar);
+
+    loadingEl.classList.toggle(
+        'hidden',
+        !mostrar
+    );
 }
 
 
@@ -26,13 +34,17 @@ function mostrarCarregando(mostrar) {
    ========================= */
 
 function mostrarErro(mensagem) {
+
     errorEl.textContent = mensagem;
+
     errorEl.classList.remove('hidden');
 }
 
 
 function limparMensagens() {
+
     errorEl.classList.add('hidden');
+
     errorEl.textContent = '';
 
     resultDiv.classList.add('hidden');
@@ -91,7 +103,8 @@ function obterDescricaoClima(codigo) {
 
     };
 
-    return descricoes[codigo] || 'Condição climática desconhecida';
+    return descricoes[codigo] ||
+        'Condição climática desconhecida';
 }
 
 
@@ -102,42 +115,52 @@ function obterDescricaoClima(codigo) {
 function obterIconeClima(codigo, isDay) {
 
     if (codigo === 0) {
+
         return isDay ? '☀️' : '🌙';
     }
 
     if (codigo === 1) {
+
         return isDay ? '🌤️' : '🌙';
     }
 
     if (codigo === 2) {
+
         return isDay ? '⛅' : '☁️';
     }
 
     if (codigo === 3) {
+
         return '☁️';
     }
 
     if (codigo === 45 || codigo === 48) {
+
         return '🌫️';
     }
 
     if (codigo >= 51 && codigo <= 55) {
+
         return '🌦️';
     }
 
     if (codigo >= 61 && codigo <= 65) {
+
         return '🌧️';
     }
 
     if (codigo >= 71 && codigo <= 75) {
+
         return '❄️';
     }
 
     if (codigo >= 80 && codigo <= 82) {
+
         return '🌦️';
     }
 
     if (codigo >= 95) {
+
         return '⛈️';
     }
 
@@ -146,42 +169,63 @@ function obterIconeClima(codigo, isDay) {
 
 
 /* =========================
-   DATA E HORA COMPLETAS
+   HORÁRIO
    ========================= */
 
-function formatarDataHora(dataHora) {
+/*
+   Recebe um horário no formato:
 
-    const data = new Date(dataHora);
+   2026-08-17T12:45
 
-    return data.toLocaleString('pt-BR', {
+   e retorna somente:
 
-        weekday: 'long',
+   12:45
+*/
 
-        day: '2-digit',
+function formatarHorarioLocal(dataHora) {
 
-        month: 'long',
+    return dataHora.substring(11, 16);
+}
 
-        year: 'numeric',
 
-        hour: '2-digit',
+/*
+   Retorna o horário atual
+   da máquina do usuário.
+*/
 
-        minute: '2-digit'
+function obterHorarioAtual() {
 
-    });
+    return new Date().toLocaleTimeString(
+        'pt-BR',
+        {
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+    );
 }
 
 
 /* =========================
    FASE DO DIA
    ========================= */
+
 function definirFaseDoDia(dataHora) {
 
-    // A Open-Meteo retorna algo como:
-    // 2026-08-16T21:00
+    /*
+       O horário utilizado aqui é o horário
+       da cidade pesquisada.
+
+       Exemplo:
+
+       Tóquio → 21h → noite
+       Londres → 10h → manhã
+       São Paulo → 15h → tarde
+    */
 
     const hora = Number(
         dataHora.substring(11, 13)
     );
+
 
     document.body.classList.remove(
         'manha',
@@ -190,26 +234,35 @@ function definirFaseDoDia(dataHora) {
         'madrugada'
     );
 
+
     if (hora >= 6 && hora < 12) {
 
-        document.body.classList.add('manha');
+        document.body.classList.add(
+            'manha'
+        );
 
     } else if (hora >= 12 && hora < 18) {
 
-        document.body.classList.add('tarde');
+        document.body.classList.add(
+            'tarde'
+        );
 
     } else if (hora >= 18 && hora < 24) {
 
-        document.body.classList.add('noite');
+        document.body.classList.add(
+            'noite'
+        );
 
     } else {
 
-        document.body.classList.add('madrugada');
-
+        document.body.classList.add(
+            'madrugada'
+        );
     }
 
+
     console.log(
-        `Horário: ${hora}h`
+        `Horário da cidade: ${hora}h`
     );
 
     console.log(
@@ -222,163 +275,231 @@ function definirFaseDoDia(dataHora) {
    BUSCAR CLIMA
    ========================= */
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener(
+    'submit',
+    async (e) => {
 
-    e.preventDefault();
-
-    const cidade = cityInput.value.trim();
-
-    if (!cidade) {
-
-        mostrarErro('Digite o nome de uma cidade.');
-
-        return;
-    }
+        e.preventDefault();
 
 
-    limparMensagens();
-
-    mostrarCarregando(true);
-
-
-    try {
-
-        /* =========================
-           1. GEOCODIFICAÇÃO
-           ========================= */
-
-        const respostaLocalizacao = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`
-        );
+        const cidade =
+            cityInput.value.trim();
 
 
-        if (!respostaLocalizacao.ok) {
-
-            throw new Error(
-                'Erro ao consultar a localização.'
-            );
-        }
-
-
-        const localizacao =
-            await respostaLocalizacao.json();
-
-
-        if (
-            !localizacao.results ||
-            localizacao.results.length === 0
-        ) {
+        if (!cidade) {
 
             mostrarErro(
-                'Cidade não encontrada. Verifique o nome informado.'
+                'Digite o nome de uma cidade.'
             );
 
             return;
         }
 
 
-        const cidadeEncontrada =
-            localizacao.results[0];
+        limparMensagens();
+
+        mostrarCarregando(true);
 
 
-        const latitude =
-            cidadeEncontrada.latitude;
+        try {
 
-        const longitude =
-            cidadeEncontrada.longitude;
+            /* =========================
+               1. GEOCODIFICAÇÃO
+               ========================= */
 
-
-        /* =========================
-           2. CONSULTA DO CLIMA
-           ========================= */
-
-        const respostaClima = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=America%2FSao_Paulo`
-        );
+            const respostaLocalizacao =
+                await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`
+                );
 
 
-        if (!respostaClima.ok) {
+            if (!respostaLocalizacao.ok) {
 
-            throw new Error(
-                'Erro ao consultar o clima.'
-            );
-        }
-
-
-        const dadosClima =
-            await respostaClima.json();
+                throw new Error(
+                    'Erro ao consultar a localização.'
+                );
+            }
 
 
-        const climaAtual =
-            dadosClima.current_weather;
+            const localizacao =
+                await respostaLocalizacao.json();
 
 
-        /* =========================
-           3. ATUALIZA A INTERFACE
-           ========================= */
+            if (
+                !localizacao.results ||
+                localizacao.results.length === 0
+            ) {
 
-        cityNameEl.textContent =
-            `${cidadeEncontrada.name}${
-                cidadeEncontrada.country
-                    ? ', ' + cidadeEncontrada.country
-                    : ''
-            }`;
+                mostrarErro(
+                    'Cidade não encontrada. ' +
+                    'Verifique o nome informado.'
+                );
 
-
-        tempEl.textContent =
-            `${climaAtual.temperature} °C`;
+                return;
+            }
 
 
-        descEl.textContent =
-            `${obterIconeClima(
-                climaAtual.weathercode,
-                climaAtual.is_day
-            )} ${
-                obterDescricaoClima(
-                    climaAtual.weathercode
-                )
-            }`;
+            const cidadeEncontrada =
+                localizacao.results[0];
 
 
-        windEl.textContent =
-            `💨 Vento: ${climaAtual.windspeed} km/h ` +
-            `(direção ${climaAtual.winddirection}°)`;
+            const latitude =
+                cidadeEncontrada.latitude;
+
+            const longitude =
+                cidadeEncontrada.longitude;
 
 
-        updatedAtEl.textContent =
-            `Atualizado em ${formatarDataHora(
+            /* =========================
+               2. CONSULTA DO CLIMA
+               ========================= */
+
+            const respostaClima =
+                await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
+                );
+
+
+            if (!respostaClima.ok) {
+
+                throw new Error(
+                    'Erro ao consultar o clima.'
+                );
+            }
+
+
+            const dadosClima =
+                await respostaClima.json();
+
+
+            const climaAtual =
+                dadosClima.current_weather;
+
+
+            /* =========================
+               3. ATUALIZA A INTERFACE
+               ========================= */
+
+            cityNameEl.textContent =
+                `${cidadeEncontrada.name}${
+                    cidadeEncontrada.country
+                        ? ', ' +
+                          cidadeEncontrada.country
+                        : ''
+                }`;
+
+
+            /*
+               Horário da cidade pesquisada.
+            */
+
+            localTimeEl.textContent =
+                `Horário destino: ${
+                    formatarHorarioLocal(
+                        climaAtual.time
+                    )
+                }`;
+
+
+            tempEl.textContent =
+                `${climaAtual.temperature} °C`;
+
+
+            descEl.textContent =
+                `${obterIconeClima(
+                    climaAtual.weathercode,
+                    climaAtual.is_day
+                )} ${
+                    obterDescricaoClima(
+                        climaAtual.weathercode
+                    )
+                }`;
+
+
+            windEl.textContent =
+                `💨 Vento: ${
+                    climaAtual.windspeed
+                } km/h ` +
+                `(direção ${
+                    climaAtual.winddirection
+                }°)`;
+
+
+            /*
+               Horário local do usuário.
+            */
+
+            updatedAtEl.textContent =
+                `Atualizado em: ${
+                    obterHorarioAtual()
+                }`;
+
+
+            /* =========================
+               4. ALTERA O FUNDO
+               ========================= */
+
+            /*
+               O fundo será definido de acordo
+               com o horário da cidade pesquisada.
+            */
+
+            definirFaseDoDia(
                 climaAtual.time
-            )}`;
+            );
 
 
-        /* =========================
-           4. ALTERA O FUNDO
-           ========================= */
+            resultDiv.classList.remove(
+                'hidden'
+            );
 
-        definirFaseDoDia(
-            climaAtual.time
-        );
+        } catch (erro) {
 
-
-        resultDiv.classList.remove('hidden');
-
-    } catch (erro) {
-
-        console.error(
-            'Erro ao buscar dados:',
-            erro
-        );
+            console.error(
+                'Erro ao buscar dados:',
+                erro
+            );
 
 
-        mostrarErro(
-            'Não foi possível carregar os dados do clima. ' +
-            'Verifique sua conexão com a internet.'
-        );
+            mostrarErro(
+                'Não foi possível carregar os dados do clima. ' +
+                'Verifique sua conexão com a internet.'
+            );
 
-    } finally {
+        } finally {
 
-        mostrarCarregando(false);
-
+            mostrarCarregando(false);
+        }
     }
+);
 
-});
+
+/* =========================
+   TEMA DA APLICAÇÃO
+   ========================= */
+
+themeToggle.addEventListener(
+    'click',
+    () => {
+
+        document.body.classList.toggle(
+            'dark-mode'
+        );
+
+
+        if (
+            document.body.classList.contains(
+                'dark-mode'
+            )
+        ) {
+
+            themeToggle.textContent =
+                '☀️ Modo claro';
+
+        } else {
+
+            themeToggle.textContent =
+                '🌙 Modo escuro';
+        }
+    }
+);

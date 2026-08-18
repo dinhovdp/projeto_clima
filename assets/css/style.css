@@ -2,24 +2,34 @@
     box-sizing: border-box;
 }
 
+
+/* =========================
+   CONFIGURAÇÃO GERAL
+   ========================= */
+
 body {
     font-family: Arial, sans-serif;
 
-    /* Fundo padrão */
     background: linear-gradient(135deg, #b9dcf2, #d7ebf7);
 
     display: flex;
+    flex-direction: column;
+
     justify-content: center;
     align-items: center;
 
     min-height: 100vh;
+
     margin: 0;
     padding: 20px;
 
+    color: #222;
+
     transition:
         background 1.5s ease,
-        color 1.5s ease;
+        color 0.5s ease;
 }
+
 
 /* =========================
    FASES DO DIA
@@ -47,18 +57,66 @@ body.madrugada {
 
 
 /* =========================
+   CONTROLE DE TEMA
+   ========================= */
+
+.theme-container {
+    width: 100%;
+    max-width: 380px;
+
+    display: flex;
+    justify-content: flex-end;
+
+    margin-bottom: 12px;
+}
+
+#theme-toggle {
+    padding: 8px 14px;
+
+    background-color: rgba(255, 255, 255, 0.85);
+    color: #333;
+
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 0.9rem;
+    font-weight: bold;
+
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.1s ease;
+}
+
+#theme-toggle:hover {
+    background-color: white;
+}
+
+#theme-toggle:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================
    CARD PRINCIPAL
    ========================= */
 
 .container {
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.28);
 
     padding: 28px 30px;
 
     border-radius: 16px;
 
+    border: 1px solid rgba(255, 255, 255, 0.45);
+
     box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.15);
+        0 10px 30px rgba(0, 0, 0, 0.12);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
     width: 100%;
     max-width: 380px;
@@ -66,10 +124,11 @@ body.madrugada {
     text-align: center;
 
     transition:
-        background 1.5s ease,
-        box-shadow 1.5s ease;
+        background 0.5s ease,
+        box-shadow 0.5s ease,
+        border-color 0.5s ease,
+        color 0.5s ease;
 }
-
 
 /* =========================
    TÍTULO
@@ -77,6 +136,7 @@ body.madrugada {
 
 h1 {
     font-size: 1.6rem;
+
     margin-top: 0;
     margin-bottom: 22px;
 }
@@ -89,6 +149,7 @@ h1 {
 form {
     display: flex;
     flex-direction: column;
+
     gap: 10px;
 }
 
@@ -104,12 +165,20 @@ input {
 
     outline: none;
 
-    transition: border-color 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.3s ease,
+        color 0.3s ease;
 }
 
 input:focus {
     border-color: #007bff;
 }
+
+
+/* =========================
+   BOTÕES
+   ========================= */
 
 button {
     padding: 12px 15px;
@@ -140,6 +209,7 @@ button:active {
 
 button:disabled {
     background-color: #9bbfe0;
+
     cursor: not-allowed;
 }
 
@@ -150,12 +220,15 @@ button:disabled {
 
 #loading {
     margin-top: 16px;
+
     color: #555;
 }
 
 .erro {
     margin-top: 16px;
+
     color: #c0392b;
+
     font-weight: bold;
 }
 
@@ -166,6 +239,7 @@ button:disabled {
 
 #weather-result {
     margin-top: 24px;
+
     text-align: center;
 }
 
@@ -178,43 +252,57 @@ button:disabled {
 }
 
 
-/* Ícone do clima */
+/* =========================
+   ÍCONE DO CLIMA
+   ========================= */
 
 #weather-icon {
     font-size: 4rem;
+
     margin: 5px 0 10px;
 }
 
 
-/* Temperatura */
+/* =========================
+   TEMPERATURA
+   ========================= */
 
 #temperature {
     font-size: 2.4rem;
+
     font-weight: bold;
 
     margin: 8px 0;
 }
 
 
-/* Descrição */
+/* =========================
+   DESCRIÇÃO
+   ========================= */
 
 #weather-description {
     font-size: 1.1rem;
+
     font-weight: 500;
 }
 
 
-/* Vento */
+/* =========================
+   VENTO
+   ========================= */
 
 #wind {
     color: #555;
 }
 
 
-/* Data */
+/* =========================
+   DATA
+   ========================= */
 
 #updated-at {
     font-size: 0.85rem;
+
     color: #777;
 
     margin-top: 18px !important;
@@ -222,12 +310,119 @@ button:disabled {
 
 
 /* =========================
-   CLIMA EM PERÍODOS ESCUROS
+   MODO ESCURO
    ========================= */
 
-body.noite .container,
-body.madrugada .container {
-    background: rgba(255, 255, 255, 0.95);
+body.dark-mode {
+    background: #0B1726;
+
+    color: #FFFFFF;
+}
+
+
+/* Container azul escuro */
+
+body.dark-mode .container {
+    background: rgba(20, 45, 70, 0.55);
+
+    color: #FFFFFF;
+
+    border-color: rgba(255, 255, 255, 0.18);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+
+/* Textos */
+
+body.dark-mode .container h1,
+body.dark-mode .container h2,
+body.dark-mode .container p {
+    color: #FFFFFF;
+}
+
+
+/* Input */
+
+body.dark-mode input {
+    background-color: #10263D;
+
+    color: #FFFFFF;
+
+    border-color: #365675;
+}
+
+body.dark-mode input::placeholder {
+    color: #B8C7D9;
+}
+
+body.dark-mode input:focus {
+    border-color: #4DA3FF;
+}
+
+
+/* Vento */
+
+body.dark-mode #wind {
+    color: #B8C7D9;
+}
+
+
+/* Data */
+
+body.dark-mode #updated-at {
+    color: #B8C7D9;
+}
+
+
+/* Mensagem de erro */
+
+body.dark-mode .erro {
+    color: #FF8A80;
+}
+
+
+/* Botão de tema */
+
+body.dark-mode #theme-toggle {
+    background-color: #17324D;
+
+    color: #FFFFFF;
+
+    border-color: #365675;
+}
+
+body.dark-mode #theme-toggle:hover {
+    background-color: #214563;
+}
+
+
+/* =========================
+   COMPATIBILIDADE COM
+   NOITE / MADRUGADA
+   ========================= */
+
+/*
+   No modo normal, o card continua branco
+   durante noite e madrugada.
+*/
+
+body.noite:not(.dark-mode) .container,
+body.madrugada:not(.dark-mode) .container {
+    background: rgba(255, 255, 255, 0.781);
+}
+
+
+
+/*
+   No modo escuro, o card continua azul
+   independentemente da fase do dia.
+*/
+
+body.dark-mode.noite .container,
+body.dark-mode.madrugada .container {
+    background: #17324D;
 }
 
 
@@ -248,6 +443,10 @@ body.madrugada .container {
 
     body {
         padding: 15px;
+    }
+
+    .theme-container {
+        max-width: 100%;
     }
 
     .container {

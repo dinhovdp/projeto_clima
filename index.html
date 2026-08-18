@@ -1,30 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Consulta de Clima</title>
+
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
+
 <body>
+
+    <!-- Controle de tema -->
+    <div class="theme-container">
+        <button id="theme-toggle" type="button">
+            🌙 Modo escuro
+        </button>
+    </div>
+
+    <!-- Área principal do clima -->
     <div class="container">
+
         <h1>Clima Atual</h1>
+
         <form id="weather-form">
-            <input type="text" id="city-input" placeholder="Digite o nome da cidade..." required>
-            <button type="submit">Buscar</button>
+
+            <input
+                type="text"
+                id="city-input"
+                placeholder="Digite o nome da cidade..."
+                required
+            >
+
+            <button type="submit">
+                Buscar
+            </button>
+
         </form>
 
-        <p id="loading" class="hidden">Buscando...</p>
+        <p id="loading" class="hidden">
+            Buscando...
+        </p>
+
         <p id="error-message" class="hidden erro"></p>
 
         <div id="weather-result" class="hidden">
-            <h2 id="city-name"></h2>
-            <p id="temperature"></p>
-            <p id="weather-description"></p>
-            <p id="wind"></p>
-            <p id="updated-at"></p>
-        </div>
+
+    <h2 id="city-name"></h2>
+
+    <p id="local-time"></p>
+
+    <p id="temperature"></p>
+
+    <p id="weather-description"></p>
+
+    <p id="wind"></p>
+
+    <p id="updated-at"></p>
+
+</div>
+
     </div>
+
     <script src="/assets/js/api.js"></script>
+
 </body>
+
 </html>
