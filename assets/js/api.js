@@ -4,6 +4,20 @@
 
 
 /* =========================================================
+   CONFIGURAÇÕES
+   ========================================================= */
+
+const CACHE_TEMPO =
+    10 * 60 * 1000;
+
+const TEMPO_LIMITE_REQUISICAO =
+    15000;
+
+const TAMANHO_MAXIMO_CIDADE =
+    100;
+
+
+/* =========================================================
    ELEMENTOS DA INTERFACE
    ========================================================= */
 
@@ -22,6 +36,18 @@ const cityInput =
 const themeToggle =
     document.getElementById(
         'theme-toggle'
+    );
+
+
+const themeIcon =
+    document.getElementById(
+        'theme-icon'
+    );
+
+
+const themeText =
+    document.getElementById(
+        'theme-text'
     );
 
 
@@ -67,6 +93,12 @@ const descEl =
     );
 
 
+const weatherIconEl =
+    document.getElementById(
+        'weather-icon'
+    );
+
+
 const windEl =
     document.getElementById(
         'wind'
@@ -79,17 +111,21 @@ const updatedAtEl =
     );
 
 
+const feelsLikeEl =
+    document.getElementById(
+        'feels-like'
+    );
+
+
+const humidityEl =
+    document.getElementById(
+        'humidity'
+    );
+
+
 /* =========================================================
-   DADOS DA CIDADE ATUAL
+   ESTADO GLOBAL
    ========================================================= */
-
-/*
-   Essas duas variáveis ficam disponíveis
-   globalmente para o comparison.js.
-
-   Quando uma cidade é pesquisada,
-   elas recebem os dados da última pesquisa.
-*/
 
 window.cidadeAtualPesquisada =
     undefined;
@@ -99,18 +135,85 @@ window.climaAtualPesquisado =
     undefined;
 
 
+let requisicaoAtual = 0;
+
+
+/* =========================================================
+   VALIDAÇÃO INICIAL DO HTML
+   ========================================================= */
+
+function validarElementosObrigatorios() {
+
+    const elementos = [
+
+        form,
+
+        cityInput,
+
+        themeToggle,
+
+        loadingEl,
+
+        errorEl,
+
+        resultDiv,
+
+        cityNameEl,
+
+        tempEl,
+
+        localTimeEl,
+
+        descEl,
+
+        windEl,
+
+        updatedAtEl
+
+    ];
+
+
+    return elementos.every(
+        elemento => elemento !== null
+    );
+}
+
+
+if (
+    !validarElementosObrigatorios()
+) {
+
+    throw new Error(
+        'A estrutura necessária do index.html não foi encontrada.'
+    );
+
+}
+
+
 /* =========================================================
    CARREGAMENTO
    ========================================================= */
 
-function mostrarCarregando(
-    mostrar
-) {
+function mostrarCarregando(mostrar) {
 
     loadingEl.classList.toggle(
         'hidden',
         !mostrar
     );
+
+
+    form
+        .querySelectorAll(
+            'input, button'
+        )
+        .forEach(
+            elemento => {
+
+                elemento.disabled =
+                    mostrar;
+
+            }
+        );
 }
 
 
@@ -118,9 +221,7 @@ function mostrarCarregando(
    ERROS
    ========================================================= */
 
-function mostrarErro(
-    mensagem
-) {
+function mostrarErro(mensagem) {
 
     errorEl.textContent =
         mensagem;
@@ -132,27 +233,24 @@ function mostrarErro(
 }
 
 
-function limparMensagens() {
-
-    errorEl.classList.add(
-        'hidden'
-    );
-
+function limparErro() {
 
     errorEl.textContent =
         '';
 
 
+    errorEl.classList.add(
+        'hidden'
+    );
+}
+
+
+function limparResultadoAnterior() {
+
     resultDiv.classList.add(
         'hidden'
     );
 
-
-    /*
-       Esconde a previsão anterior
-       enquanto uma nova cidade
-       está sendo pesquisada.
-    */
 
     const forecastSection =
         document.getElementById(
@@ -160,14 +258,110 @@ function limparMensagens() {
         );
 
 
-    if (
-        forecastSection
-    ) {
+    if (forecastSection) {
 
         forecastSection.classList.add(
             'hidden'
         );
+
     }
+}
+
+
+function limparMensagens() {
+
+    limparErro();
+
+    limparResultadoAnterior();
+
+}
+
+
+/* =========================================================
+   NORMALIZAÇÃO DA CIDADE
+   ========================================================= */
+
+function normalizarCidade(cidade) {
+
+    if (
+        typeof cidade !== 'string'
+    ) {
+
+        return '';
+
+    }
+
+
+    return cidade
+        .trim()
+        .replace(/\s+/g, ' ')
+        .normalize('NFC');
+}
+
+
+/* =========================================================
+   VALIDAÇÃO DA CIDADE
+   ========================================================= */
+
+function validarCidade(cidade) {
+
+    if (!cidade) {
+
+        return {
+
+            valida: false,
+
+            mensagem:
+                'Digite o nome de uma cidade.'
+
+        };
+
+    }
+
+
+    if (
+        cidade.length >
+        TAMANHO_MAXIMO_CIDADE
+    ) {
+
+        return {
+
+            valida: false,
+
+            mensagem:
+                'O nome da cidade é muito longo.'
+
+        };
+
+    }
+
+
+    const cidadeValida =
+        /^[\p{L}\p{N}][\p{L}\p{N}\s.'’()-]*$/u
+            .test(cidade);
+
+
+    if (!cidadeValida) {
+
+        return {
+
+            valida: false,
+
+            mensagem:
+                'Informe um nome de cidade válido.'
+
+        };
+
+    }
+
+
+    return {
+
+        valida: true,
+
+        mensagem: ''
+
+    };
 }
 
 
@@ -175,80 +369,77 @@ function limparMensagens() {
    DESCRIÇÃO DO CLIMA
    ========================================================= */
 
-function obterDescricaoClima(
-    codigo
-) {
+function obterDescricaoClima(codigo) {
 
     const descricoes = {
 
-        0:
-            'Céu limpo',
+        0: 'Céu limpo',
 
-        1:
-            'Principalmente limpo',
+        1: 'Principalmente limpo',
 
-        2:
-            'Parcialmente nublado',
+        2: 'Parcialmente nublado',
 
-        3:
-            'Nublado',
+        3: 'Nublado',
 
-        45:
-            'Neblina',
+        45: 'Neblina',
 
-        48:
-            'Neblina com geada',
+        48: 'Neblina com geada',
 
-        51:
-            'Garoa fraca',
+        51: 'Garoa fraca',
 
-        53:
-            'Garoa moderada',
+        53: 'Garoa moderada',
 
-        55:
-            'Garoa intensa',
+        55: 'Garoa intensa',
 
-        61:
-            'Chuva fraca',
+        56: 'Garoa congelante fraca',
 
-        63:
-            'Chuva moderada',
+        57: 'Garoa congelante intensa',
 
-        65:
-            'Chuva intensa',
+        61: 'Chuva fraca',
 
-        71:
-            'Neve fraca',
+        63: 'Chuva moderada',
 
-        73:
-            'Neve moderada',
+        65: 'Chuva intensa',
 
-        75:
-            'Neve intensa',
+        66: 'Chuva congelante fraca',
 
-        80:
-            'Pancadas de chuva fracas',
+        67: 'Chuva congelante intensa',
 
-        81:
-            'Pancadas de chuva moderadas',
+        71: 'Neve fraca',
 
-        82:
-            'Pancadas de chuva intensas',
+        73: 'Neve moderada',
 
-        95:
-            'Trovoada',
+        75: 'Neve intensa',
 
-        96:
-            'Trovoada com granizo',
+        77: 'Granizo de neve',
 
-        99:
-            'Trovoada forte com granizo'
+        80: 'Pancadas de chuva fracas',
+
+        81: 'Pancadas de chuva moderadas',
+
+        82: 'Pancadas de chuva intensas',
+
+        85: 'Pancadas de neve fracas',
+
+        86: 'Pancadas de neve intensas',
+
+        95: 'Trovoada',
+
+        96: 'Trovoada com granizo',
+
+        99: 'Trovoada forte com granizo'
 
     };
 
 
-    return descricoes[codigo] ||
-        'Condição climática desconhecida';
+    return Object.prototype.hasOwnProperty.call(
+        descricoes,
+        codigo
+    )
+
+        ? descricoes[codigo]
+
+        : 'Condição climática desconhecida';
 }
 
 
@@ -261,41 +452,37 @@ function obterIconeClima(
     isDay
 ) {
 
-    if (
-        codigo === 0
-    ) {
+    if (codigo === 0) {
 
         return isDay
             ? '☀️'
             : '🌙';
+
     }
 
 
-    if (
-        codigo === 1
-    ) {
+    if (codigo === 1) {
 
         return isDay
             ? '🌤️'
             : '🌙';
+
     }
 
 
-    if (
-        codigo === 2
-    ) {
+    if (codigo === 2) {
 
         return isDay
             ? '⛅'
             : '☁️';
+
     }
 
 
-    if (
-        codigo === 3
-    ) {
+    if (codigo === 3) {
 
         return '☁️';
+
     }
 
 
@@ -305,33 +492,37 @@ function obterIconeClima(
     ) {
 
         return '🌫️';
+
     }
 
 
     if (
         codigo >= 51 &&
-        codigo <= 55
+        codigo <= 57
     ) {
 
         return '🌦️';
+
     }
 
 
     if (
         codigo >= 61 &&
-        codigo <= 65
+        codigo <= 67
     ) {
 
         return '🌧️';
+
     }
 
 
     if (
         codigo >= 71 &&
-        codigo <= 75
+        codigo <= 77
     ) {
 
         return '❄️';
+
     }
 
 
@@ -341,14 +532,27 @@ function obterIconeClima(
     ) {
 
         return '🌦️';
+
     }
 
 
     if (
-        codigo >= 95
+        codigo >= 85 &&
+        codigo <= 86
+    ) {
+
+        return '❄️';
+
+    }
+
+
+    if (
+        codigo >= 95 &&
+        codigo <= 99
     ) {
 
         return '⛈️';
+
     }
 
 
@@ -360,49 +564,84 @@ function obterIconeClima(
    HORÁRIO
    ========================================================= */
 
-/*
-   Exemplo:
+function formatarHorarioLocal(dataHora) {
 
-   2026-08-18T14:35
+    if (
+        typeof dataHora !== 'string'
+    ) {
 
-   Resultado:
+        return '--:--';
 
-   14:35
-*/
+    }
 
-function formatarHorarioLocal(
+
+    const correspondencia =
+        /^(\d{2}):(\d{2})$/.exec(
+            dataHora.substring(
+                11,
+                16
+            )
+        );
+
+
+    if (!correspondencia) {
+
+        return '--:--';
+
+    }
+
+
+    return `${correspondencia[1]}:${correspondencia[2]}`;
+}
+
+
+/* =========================================================
+   DATA E HORÁRIO
+   ========================================================= */
+
+function formatarDataHoraLocal(
     dataHora
 ) {
 
     if (
-        !dataHora
+        typeof dataHora !== 'string'
     ) {
 
-        return '--:--';
+        return '--/--/---- --:--';
+
     }
 
 
-    return dataHora.substring(
-        11,
-        16
-    );
-}
+    const correspondencia =
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
+            .exec(dataHora);
 
 
-/*
-   Horário atual da máquina
-   do usuário.
-*/
+    if (!correspondencia) {
 
-function obterHorarioAtual() {
+        return '--/--/---- --:--';
 
-    return new Date().toLocaleTimeString(
-        'pt-BR',
-        {
-            hour: '2-digit',
-            minute: '2-digit'
-        }
-    );
+    }
+
+
+    const [
+
+        ,
+
+        ano,
+
+        mes,
+
+        dia,
+
+        hora,
+
+        minuto
+
+    ] = correspondencia;
+
+
+    return `${dia}/${mes}/${ano} às ${hora}:${minuto}`;
 }
 
 
@@ -410,42 +649,45 @@ function obterHorarioAtual() {
    FASE DO DIA
    ========================================================= */
 
-/*
-   Agora a fase do dia continua
-   sendo utilizada apenas para
-   informações complementares.
-
-   As futuras animações de clima
-   serão controladas pelo clima
-   atual e não apenas pelo horário.
-*/
-
-function definirFaseDoDia(
-    dataHora
-) {
+function definirFaseDoDia(dataHora) {
 
     if (
-        !dataHora
+        typeof dataHora !== 'string'
     ) {
 
         return;
+
+    }
+
+
+    const correspondencia =
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):/
+            .exec(dataHora);
+
+
+    if (!correspondencia) {
+
+        return;
+
     }
 
 
     const hora =
         Number(
-            dataHora.substring(
-                11,
-                13
-            )
+            correspondencia[4]
         );
 
 
     document.body.classList.remove(
+
         'manha',
+
         'tarde',
+
         'noite',
+
         'madrugada'
+
     );
 
 
@@ -458,7 +700,9 @@ function definirFaseDoDia(
             'manha'
         );
 
-    } else if (
+    }
+
+    else if (
         hora >= 12 &&
         hora < 18
     ) {
@@ -467,7 +711,9 @@ function definirFaseDoDia(
             'tarde'
         );
 
-    } else if (
+    }
+
+    else if (
         hora >= 18 &&
         hora < 24
     ) {
@@ -476,11 +722,14 @@ function definirFaseDoDia(
             'noite'
         );
 
-    } else {
+    }
+
+    else {
 
         document.body.classList.add(
             'madrugada'
         );
+
     }
 }
 
@@ -489,83 +738,78 @@ function definirFaseDoDia(
    CACHE
    ========================================================= */
 
-/*
-   O cache permanece válido
-   durante 10 minutos.
-*/
+function criarChaveCache(cidade) {
 
-const CACHE_TEMPO =
-    10 * 60 * 1000;
+    const cidadeNormalizada =
+        normalizarCidade(cidade)
+            .toLowerCase();
 
 
-/*
-   Cria uma chave específica
-   para cada cidade.
-*/
-
-function criarChaveCache(
-    cidade
-) {
-
-    return `clima_${
-        cidade
-            .trim()
-            .toLowerCase()
-    }`;
+    return `clima_api_cache_${encodeURIComponent(
+        cidadeNormalizada
+    )}`;
 }
 
 
-/*
-   Salva todos os dados necessários:
-
-   - cidade;
-   - clima atual;
-   - previsão de 7 dias.
-*/
+/* =========================================================
+   SALVAR CACHE
+   ========================================================= */
 
 function salvarCache(
     cidade,
     dados
 ) {
 
+    if (
+        !cidade ||
+        !dados
+    ) {
+
+        return;
+
+    }
+
+
     const cache = {
 
-        dados:
-            dados,
+        versao: 2,
 
-        timestamp:
-            Date.now()
+        dados: dados,
+
+        timestamp: Date.now()
 
     };
 
 
-    localStorage.setItem(
+    try {
 
-        criarChaveCache(
-            cidade
-        ),
+        localStorage.setItem(
 
-        JSON.stringify(
-            cache
-        )
+            criarChaveCache(
+                cidade
+            ),
 
-    );
+            JSON.stringify(cache)
+
+        );
+
+    }
+
+    catch (erro) {
+
+        console.warn(
+            'Não foi possível salvar o cache local.'
+        );
+
+    }
 }
 
 
-/*
-   Recupera o cache.
+/* =========================================================
+   OBTER CACHE
+   ========================================================= */
 
-   Retorna null quando:
-
-   - não existe;
-   - está expirado;
-   - está corrompido.
-*/
-
-function obterCache(
-    cidade
-) {
+function obterCache(cidade) {
 
     const chave =
         criarChaveCache(
@@ -573,17 +817,29 @@ function obterCache(
         );
 
 
-    const dadosSalvos =
-        localStorage.getItem(
-            chave
-        );
+    let dadosSalvos;
 
 
-    if (
-        !dadosSalvos
-    ) {
+    try {
+
+        dadosSalvos =
+            localStorage.getItem(
+                chave
+            );
+
+    }
+
+    catch (erro) {
 
         return null;
+
+    }
+
+
+    if (!dadosSalvos) {
+
+        return null;
+
     }
 
 
@@ -595,43 +851,76 @@ function obterCache(
             );
 
 
-        const cacheExpirado =
-            Date.now() -
-            cache.timestamp >
-            CACHE_TEMPO;
-
-
         if (
-            cacheExpirado
+            !cache ||
+            typeof cache !== 'object'
         ) {
 
             localStorage.removeItem(
                 chave
             );
 
-
             return null;
+
         }
 
 
-        return cache.dados;
+        if (
+            typeof cache.timestamp !==
+            'number'
+        ) {
 
-    } catch (
-        erro
-    ) {
+            localStorage.removeItem(
+                chave
+            );
 
-        console.error(
-            'Erro ao ler cache:',
-            erro
-        );
+            return null;
+
+        }
 
 
-        localStorage.removeItem(
-            chave
-        );
+        const idadeCache =
+            Date.now() -
+            cache.timestamp;
+
+
+        if (
+            idadeCache < 0 ||
+            idadeCache > CACHE_TEMPO
+        ) {
+
+            localStorage.removeItem(
+                chave
+            );
+
+            return null;
+
+        }
+
+
+        return cache.dados || null;
+
+    }
+
+    catch (erro) {
+
+        try {
+
+            localStorage.removeItem(
+                chave
+            );
+
+        }
+
+        catch (erroRemocao) {
+
+            // Armazenamento indisponível.
+
+        }
 
 
         return null;
+
     }
 }
 
@@ -640,27 +929,18 @@ function obterCache(
    VALIDAÇÃO DO CACHE
    ========================================================= */
 
-/*
-   Caches antigos podem não possuir:
-
-   - sensação térmica;
-   - umidade.
-
-   Nesse caso, o cache não será
-   utilizado para evitar que os
-   novos cards apareçam incompletos.
-*/
-
 function cachePossuiDadosNovos(
     dados
 ) {
 
     if (
         !dados ||
+        !dados.cidadeEncontrada ||
         !dados.climaAtual
     ) {
 
         return false;
+
     }
 
 
@@ -670,17 +950,129 @@ function cachePossuiDadosNovos(
 
     return (
 
-        clima.temperature !==
-            undefined &&
+        typeof clima.time ===
+            'string' &&
 
-        clima.apparent_temperature !==
-            undefined &&
+        typeof clima.temperature ===
+            'number' &&
 
-        clima.relative_humidity_2m !==
-            undefined &&
+        typeof clima.apparent_temperature ===
+            'number' &&
 
-        clima.windspeed !==
-            undefined
+        typeof clima.relative_humidity_2m ===
+            'number' &&
+
+        typeof clima.weathercode ===
+            'number' &&
+
+        typeof clima.windspeed ===
+            'number' &&
+
+        typeof clima.is_day ===
+            'number'
+
+    );
+}
+
+
+/* =========================================================
+   FETCH SEGURO COM TIMEOUT
+   ========================================================= */
+
+async function requisicaoComTimeout(
+    url
+) {
+
+    const controller =
+        new AbortController();
+
+
+    const timeout =
+        setTimeout(
+
+            () => controller.abort(),
+
+            TEMPO_LIMITE_REQUISICAO
+
+        );
+
+
+    try {
+
+        const resposta =
+            await fetch(
+
+                url,
+
+                {
+
+                    method: 'GET',
+
+                    signal:
+                        controller.signal,
+
+                    headers: {
+
+                        Accept:
+                            'application/json'
+
+                    },
+
+                    cache: 'no-store'
+
+                }
+
+            );
+
+
+        return resposta;
+
+    }
+
+    catch (erro) {
+
+        if (
+            erro.name ===
+            'AbortError'
+        ) {
+
+            throw new Error(
+                'A consulta demorou mais que o esperado.'
+            );
+
+        }
+
+
+        throw new Error(
+            'Não foi possível estabelecer conexão com o serviço de clima.'
+        );
+
+    }
+
+    finally {
+
+        clearTimeout(
+            timeout
+        );
+
+    }
+}
+
+
+/* =========================================================
+   VALIDAÇÃO NUMÉRICA
+   ========================================================= */
+
+function numeroValido(valor) {
+
+    return (
+
+        typeof valor ===
+            'number' &&
+
+        Number.isFinite(
+            valor
+        )
 
     );
 }
@@ -695,128 +1087,143 @@ function exibirDadosClima(
     climaAtual
 ) {
 
-    /* =====================================================
-       CIDADE
-       ===================================================== */
+    if (
+        !cidadeEncontrada ||
+        !climaAtual
+    ) {
+
+        return;
+
+    }
+
+
+    const nomeCidade =
+        typeof cidadeEncontrada.name ===
+            'string'
+
+            ? cidadeEncontrada.name
+
+            : 'Cidade';
+
+
+    const pais =
+        typeof cidadeEncontrada.country ===
+            'string'
+
+            ? cidadeEncontrada.country
+
+            : '';
+
 
     cityNameEl.textContent =
-        `${cidadeEncontrada.name}${
-            cidadeEncontrada.country
-                ? ', ' +
-                  cidadeEncontrada.country
-                : ''
-        }`;
+        pais
 
+            ? `${nomeCidade}, ${pais}`
 
-    /* =====================================================
-       HORÁRIO DA CIDADE
-       ===================================================== */
+            : nomeCidade;
+
 
     localTimeEl.textContent =
-        `Horário destino: ${
-            formatarHorarioLocal(
-                climaAtual.time
-            )
-        }`;
+        `Horário local: ${formatarHorarioLocal(
+            climaAtual.time
+        )}`;
 
-
-    /* =====================================================
-       TEMPERATURA
-       ===================================================== */
 
     tempEl.textContent =
-        `${climaAtual.temperature} °C`;
+        numeroValido(
+            climaAtual.temperature
+        )
+
+            ? `${climaAtual.temperature} °C`
+
+            : '-- °C';
 
 
-    /* =====================================================
-       DESCRIÇÃO
-       ===================================================== */
+    const icone =
+        obterIconeClima(
 
-    descEl.textContent =
-        `${obterIconeClima(
             climaAtual.weathercode,
+
             climaAtual.is_day
-        )} ${
+
+        );
+
+
+    if (weatherIconEl) {
+
+        weatherIconEl.textContent =
+            icone;
+
+
+        weatherIconEl.setAttribute(
+
+            'aria-label',
+
             obterDescricaoClima(
                 climaAtual.weathercode
             )
-        }`;
+
+        );
+
+    }
 
 
-    /* =====================================================
-       VENTO
-       ===================================================== */
+    descEl.textContent =
+        obterDescricaoClima(
+            climaAtual.weathercode
+        );
+
 
     windEl.textContent =
-        `💨 Vento: ${
+        numeroValido(
             climaAtual.windspeed
-        } km/h`;
+        )
+
+            ? `${climaAtual.windspeed} km/h`
+
+            : '--';
 
 
-    /* =====================================================
-       SENSAÇÃO TÉRMICA
-       ===================================================== */
-
-    const feelsLikeEl =
-        document.getElementById(
-            'feels-like'
-        );
-
-
-    if (
-        feelsLikeEl
-    ) {
+    if (feelsLikeEl) {
 
         feelsLikeEl.textContent =
-            `Sensação térmica: ${
+
+            numeroValido(
                 climaAtual.apparent_temperature
-            } °C`;
+            )
+
+                ? `${climaAtual.apparent_temperature} °C`
+
+                : '--';
+
     }
 
 
-    /* =====================================================
-       UMIDADE
-       ===================================================== */
-
-    const humidityEl =
-        document.getElementById(
-            'humidity'
-        );
-
-
-    if (
-        humidityEl
-    ) {
+    if (humidityEl) {
 
         humidityEl.textContent =
-            `Umidade: ${
+
+            numeroValido(
                 climaAtual.relative_humidity_2m
-            }%`;
+            )
+
+                ? `${climaAtual.relative_humidity_2m}%`
+
+                : '--';
+
     }
 
 
-    /* =====================================================
-       ATUALIZAÇÃO
-       ===================================================== */
-
     updatedAtEl.textContent =
-        `Atualizado em: ${
-            obterHorarioAtual()
-        }`;
+        `Atualizado em ${formatarDataHoraLocal(
+            climaAtual.time
+        )}`;
 
-
-    /* =====================================================
-       FASE DO DIA
-       ===================================================== */
 
     definirFaseDoDia(
         climaAtual.time
     );
 
-
-    /* =====================================================
-       DISPONIBILIZA DADOS PARA COMPARAÇÃO
-       ===================================================== */
 
     window.cidadeAtualPesquisada =
         cidadeEncontrada;
@@ -825,10 +1232,6 @@ function exibirDadosClima(
     window.climaAtualPesquisado =
         climaAtual;
 
-
-    /* =====================================================
-       EXIBE RESULTADO
-       ===================================================== */
 
     resultDiv.classList.remove(
         'hidden'
@@ -840,34 +1243,24 @@ function exibirDadosClima(
    BUSCAR PREVISÃO
    ========================================================= */
 
-/*
-   A previsão é responsabilidade
-   do forecast.js.
-
-   Aqui apenas chamamos a função
-   existente naquele arquivo.
-
-   Isso evita manter duas versões
-   da mesma função.
-*/
-
 async function carregarPrevisao(
     latitude,
     longitude
 ) {
 
     if (
-        typeof buscarPrevisao !==
+        typeof window.buscarPrevisao !==
         'function'
     ) {
 
         throw new Error(
-            'O arquivo forecast.js não foi carregado corretamente.'
+            'O módulo de previsão não foi carregado corretamente.'
         );
+
     }
 
 
-    return await buscarPrevisao(
+    return await window.buscarPrevisao(
 
         latitude,
 
@@ -886,37 +1279,81 @@ async function buscarClimaAtual(
     longitude
 ) {
 
-    /*
-       Dados solicitados à Open-Meteo:
+    if (
+        !numeroValido(latitude) ||
+        !numeroValido(longitude)
+    ) {
 
-       temperature_2m
-       relative_humidity_2m
-       apparent_temperature
-       weather_code
-       wind_speed_10m
-       wind_direction_10m
-       is_day
-    */
+        throw new Error(
+            'Coordenadas inválidas.'
+        );
+
+    }
+
+
+    if (
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+    ) {
+
+        throw new Error(
+            'Coordenadas fora dos limites permitidos.'
+        );
+
+    }
+
+
+    const parametros =
+        new URLSearchParams({
+
+            latitude:
+                String(latitude),
+
+            longitude:
+                String(longitude),
+
+            current: [
+
+                'temperature_2m',
+
+                'relative_humidity_2m',
+
+                'apparent_temperature',
+
+                'weather_code',
+
+                'wind_speed_10m',
+
+                'wind_direction_10m',
+
+                'is_day'
+
+            ].join(','),
+
+            timezone:
+                'auto'
+
+        });
+
 
     const url =
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day` +
-        `&timezone=auto`;
+        `https://api.open-meteo.com/v1/forecast?${parametros.toString()}`;
 
 
     const resposta =
-        await fetch(
+        await requisicaoComTimeout(
             url
         );
 
 
-    if (
-        !resposta.ok
-    ) {
+    if (!resposta.ok) {
 
         throw new Error(
-            'Erro ao consultar o clima atual.'
+            'O serviço de clima não respondeu corretamente.'
         );
+
     }
 
 
@@ -925,51 +1362,82 @@ async function buscarClimaAtual(
 
 
     if (
+        !dados ||
         !dados.current
     ) {
 
         throw new Error(
-            'Dados do clima atual não encontrados.'
+            'Os dados do clima atual não foram encontrados.'
         );
+
     }
 
 
-    /*
-       Normaliza os nomes recebidos
-       pela API para manter compatibilidade
-       com o restante da aplicação.
-    */
+    const current =
+        dados.current;
 
-    const climaAtual = {
+
+    if (
+
+        typeof current.time !==
+            'string' ||
+
+        !numeroValido(
+            current.temperature_2m
+        ) ||
+
+        !numeroValido(
+            current.apparent_temperature
+        ) ||
+
+        !numeroValido(
+            current.relative_humidity_2m
+        ) ||
+
+        !numeroValido(
+            current.weather_code
+        ) ||
+
+        !numeroValido(
+            current.wind_speed_10m
+        )
+
+    ) {
+
+        throw new Error(
+            'Os dados recebidos do serviço de clima estão incompletos.'
+        );
+
+    }
+
+
+    return {
 
         time:
-            dados.current.time,
+            current.time,
 
         temperature:
-            dados.current.temperature_2m,
+            current.temperature_2m,
 
         apparent_temperature:
-            dados.current.apparent_temperature,
+            current.apparent_temperature,
 
         relative_humidity_2m:
-            dados.current.relative_humidity_2m,
+            current.relative_humidity_2m,
 
         weathercode:
-            dados.current.weather_code,
+            current.weather_code,
 
         windspeed:
-            dados.current.wind_speed_10m,
+            current.wind_speed_10m,
 
         winddirection:
-            dados.current.wind_direction_10m,
+            current.wind_direction_10m,
 
         is_day:
-            dados.current.is_day
+            current.is_day
 
     };
-
-
-    return climaAtual;
 }
 
 
@@ -981,25 +1449,40 @@ async function buscarLocalizacao(
     cidade
 ) {
 
+    const parametros =
+        new URLSearchParams({
+
+            name:
+                cidade,
+
+            count:
+                '1',
+
+            language:
+                'pt',
+
+            format:
+                'json'
+
+        });
+
+
     const url =
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-            cidade
-        )}&count=1&language=pt&format=json`;
+        `https://geocoding-api.open-meteo.com/v1/search?${parametros.toString()}`;
 
 
     const resposta =
-        await fetch(
+        await requisicaoComTimeout(
             url
         );
 
 
-    if (
-        !resposta.ok
-    ) {
+    if (!resposta.ok) {
 
         throw new Error(
-            'Erro ao consultar a localização.'
+            'O serviço de localização não respondeu corretamente.'
         );
+
     }
 
 
@@ -1008,20 +1491,45 @@ async function buscarLocalizacao(
 
 
     if (
-        !localizacao.results ||
+        !localizacao ||
+        !Array.isArray(
+            localizacao.results
+        ) ||
         localizacao.results.length === 0
     ) {
 
         return null;
+
     }
 
 
-    return localizacao.results[0];
+    const resultado =
+        localizacao.results[0];
+
+
+    if (
+        !resultado ||
+        !numeroValido(
+            resultado.latitude
+        ) ||
+        !numeroValido(
+            resultado.longitude
+        ) ||
+        typeof resultado.name !==
+            'string'
+    ) {
+
+        return null;
+
+    }
+
+
+    return resultado;
 }
 
 
 /* =========================================================
-   BUSCAR CLIMA COMPLETO
+   BUSCAR DADOS COMPLETOS
    ========================================================= */
 
 async function buscarDadosCompletos(
@@ -1036,10 +1544,6 @@ async function buscarDadosCompletos(
         cidadeEncontrada.longitude;
 
 
-    /* =====================================================
-       CLIMA ATUAL
-       ===================================================== */
-
     const climaAtual =
         await buscarClimaAtual(
 
@@ -1049,10 +1553,6 @@ async function buscarDadosCompletos(
 
         );
 
-
-    /* =====================================================
-       PREVISÃO
-       ===================================================== */
 
     const previsao =
         await carregarPrevisao(
@@ -1084,28 +1584,39 @@ async function buscarDadosCompletos(
    ========================================================= */
 
 form.addEventListener(
-    'submit',
-    async (
-        e
-    ) => {
 
-        e.preventDefault();
+    'submit',
+
+    async evento => {
+
+        evento.preventDefault();
 
 
         const cidade =
-            cityInput.value.trim();
+            normalizarCidade(
+                cityInput.value
+            );
 
 
-        if (
-            !cidade
-        ) {
+        const validacao =
+            validarCidade(
+                cidade
+            );
+
+
+        if (!validacao.valida) {
 
             mostrarErro(
-                'Digite o nome de uma cidade.'
+                validacao.mensagem
             );
 
             return;
+
         }
+
+
+        const idRequisicao =
+            ++requisicaoAtual;
 
 
         limparMensagens();
@@ -1119,7 +1630,7 @@ form.addEventListener(
         try {
 
             /* =================================================
-               1. VERIFICA CACHE
+               CACHE
                ================================================= */
 
             const dadosCache =
@@ -1128,11 +1639,6 @@ form.addEventListener(
                 );
 
 
-            /*
-               Só utiliza cache se ele
-               possuir os novos dados.
-            */
-
             if (
                 dadosCache &&
                 cachePossuiDadosNovos(
@@ -1140,99 +1646,98 @@ form.addEventListener(
                 )
             ) {
 
-                console.log(
-                    `Cache utilizado para: ${cidade}`
-                );
+                if (
+                    idRequisicao !==
+                    requisicaoAtual
+                ) {
 
+                    return;
 
-                /* =============================================
-                   EXIBE CLIMA ATUAL
-                   ============================================= */
+                }
+
 
                 exibirDadosClima(
 
-                    dadosCache
-                        .cidadeEncontrada,
+                    dadosCache.cidadeEncontrada,
 
-                    dadosCache
-                        .climaAtual
+                    dadosCache.climaAtual
 
                 );
 
 
-                /* =============================================
-                   EXIBE PREVISÃO
-                   ============================================= */
-
                 if (
+
                     dadosCache.previsao &&
-                    typeof exibirPrevisao ===
+
+                    typeof window.exibirPrevisao ===
                         'function'
+
                 ) {
 
-                    exibirPrevisao(
+                    window.exibirPrevisao(
+
                         dadosCache.previsao
+
                     );
 
-                } else {
+                }
 
-                    /*
-                       Caso seja um cache antigo
-                       sem previsão.
-                    */
+                else {
 
                     const previsao =
                         await carregarPrevisao(
 
-                            dadosCache
-                                .cidadeEncontrada
-                                .latitude,
+                            dadosCache.cidadeEncontrada.latitude,
 
-                            dadosCache
-                                .cidadeEncontrada
-                                .longitude
+                            dadosCache.cidadeEncontrada.longitude
 
                         );
+
+
+                    if (
+                        idRequisicao !==
+                        requisicaoAtual
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    dadosCache.previsao =
+                        previsao;
 
 
                     salvarCache(
 
                         cidade,
 
-                        {
-
-                            cidadeEncontrada:
-                                dadosCache
-                                    .cidadeEncontrada,
-
-                            climaAtual:
-                                dadosCache
-                                    .climaAtual,
-
-                            previsao:
-                                previsao
-
-                        }
+                        dadosCache
 
                     );
+
+
+                    if (
+                        typeof window.exibirPrevisao ===
+                        'function'
+                    ) {
+
+                        window.exibirPrevisao(
+                            previsao
+                        );
+
+                    }
+
                 }
 
 
                 return;
+
             }
 
 
             /* =================================================
-               2. CACHE ANTIGO OU INEXISTENTE
-               ================================================= */
-
-            console.log(
-                `Buscando dados atualizados para: ${cidade}`
-            );
-
-
-            /* =================================================
-               3. GEOCODIFICAÇÃO
+               LOCALIZAÇÃO
                ================================================= */
 
             const cidadeEncontrada =
@@ -1242,20 +1747,28 @@ form.addEventListener(
 
 
             if (
-                !cidadeEncontrada
+                idRequisicao !==
+                requisicaoAtual
             ) {
 
+                return;
+
+            }
+
+
+            if (!cidadeEncontrada) {
+
                 mostrarErro(
-                    'Cidade não encontrada. ' +
-                    'Verifique o nome informado.'
+                    'Cidade não encontrada. Verifique o nome informado.'
                 );
 
                 return;
+
             }
 
 
             /* =================================================
-               4. CLIMA + PREVISÃO
+               CLIMA + PREVISÃO
                ================================================= */
 
             const dados =
@@ -1264,8 +1777,18 @@ form.addEventListener(
                 );
 
 
+            if (
+                idRequisicao !==
+                requisicaoAtual
+            ) {
+
+                return;
+
+            }
+
+
             /* =================================================
-               5. SALVA CACHE
+               CACHE
                ================================================= */
 
             salvarCache(
@@ -1277,13 +1800,8 @@ form.addEventListener(
             );
 
 
-            console.log(
-                `Dados completos salvos no cache: ${cidade}`
-            );
-
-
             /* =================================================
-               6. EXIBE CLIMA
+               EXIBIR CLIMA
                ================================================= */
 
             exibirDadosClima(
@@ -1295,71 +1813,292 @@ form.addEventListener(
             );
 
 
-            /*
-               A função buscarPrevisao()
-               já chama exibirPrevisao().
-            */
+            /* =================================================
+               EXIBIR PREVISÃO
+               ================================================= */
 
-        } catch (
-            erro
-        ) {
+            if (
+
+                dados.previsao &&
+
+                typeof window.exibirPrevisao ===
+                    'function'
+
+            ) {
+
+                window.exibirPrevisao(
+                    dados.previsao
+                );
+
+            }
+
+        }
+
+        catch (erro) {
+
+            if (
+                idRequisicao !==
+                requisicaoAtual
+            ) {
+
+                return;
+
+            }
+
 
             console.error(
-                'Erro ao buscar dados:',
+
+                'Falha na consulta do clima.',
+
                 erro
+
             );
 
 
-            mostrarErro(
-                'Não foi possível carregar os dados do clima. ' +
-                'Verifique sua conexão com a internet.'
-            );
+            if (
+                erro instanceof Error
+            ) {
 
-        } finally {
+                if (
+                    erro.message ===
+                    'A consulta demorou mais que o esperado.'
+                ) {
 
-            mostrarCarregando(
-                false
-            );
+                    mostrarErro(
+                        erro.message
+                    );
+
+                }
+
+                else if (
+                    erro.message ===
+                    'O módulo de previsão não foi carregado corretamente.'
+                ) {
+
+                    mostrarErro(
+                        erro.message
+                    );
+
+                }
+
+                else {
+
+                    mostrarErro(
+                        'Não foi possível carregar os dados do clima. Verifique sua conexão e tente novamente.'
+                    );
+
+                }
+
+            }
+
+            else {
+
+                mostrarErro(
+                    'Não foi possível carregar os dados do clima. Verifique sua conexão e tente novamente.'
+                );
+
+            }
+
+        }
+
+        finally {
+
+            if (
+                idRequisicao ===
+                requisicaoAtual
+            ) {
+
+                mostrarCarregando(
+                    false
+                );
+
+            }
+
         }
 
     }
+
 );
 
 
 /* =========================================================
-   TEMA DA APLICAÇÃO
+   TEMA
    ========================================================= */
 
-themeToggle.addEventListener(
-    'click',
-    () => {
+const CHAVE_TEMA =
+    'clima_api_tema';
 
-        document.body.classList.toggle(
-            'dark-mode'
-        );
+
+function aplicarTema(tema) {
+
+    const modoEscuro =
+        tema === 'dark';
+
+
+    document.body.classList.toggle(
+
+        'dark-mode',
+
+        modoEscuro
+
+    );
+
+
+    themeToggle.setAttribute(
+
+        'aria-pressed',
+
+        String(modoEscuro)
+
+    );
+
+
+    if (themeIcon) {
+
+        themeIcon.textContent =
+            modoEscuro
+                ? '☀️'
+                : '🌙';
+
+    }
+
+
+    if (themeText) {
+
+        themeText.textContent =
+            modoEscuro
+                ? 'Modo claro'
+                : 'Modo escuro';
+
+    }
+
+
+    if (
+        !themeIcon &&
+        !themeText
+    ) {
+
+        themeToggle.textContent =
+            modoEscuro
+                ? '☀️ Modo claro'
+                : '🌙 Modo escuro';
+
+    }
+}
+
+
+function obterTemaInicial() {
+
+    try {
+
+        const temaSalvo =
+            localStorage.getItem(
+                CHAVE_TEMA
+            );
 
 
         if (
-            document.body.classList.contains(
-                'dark-mode'
-            )
+            temaSalvo === 'dark' ||
+            temaSalvo === 'light'
         ) {
 
-            themeToggle.textContent =
-                '☀️ Modo claro';
+            return temaSalvo;
 
-        } else {
-
-            themeToggle.textContent =
-                '🌙 Modo escuro';
         }
 
     }
+
+    catch (erro) {
+
+        // LocalStorage indisponível.
+
+    }
+
+
+    if (
+
+        window.matchMedia &&
+
+        window.matchMedia(
+            '(prefers-color-scheme: dark)'
+        ).matches
+
+    ) {
+
+        return 'dark';
+
+    }
+
+
+    return 'light';
+}
+
+
+function salvarTema(tema) {
+
+    try {
+
+        localStorage.setItem(
+
+            CHAVE_TEMA,
+
+            tema
+
+        );
+
+    }
+
+    catch (erro) {
+
+        // O funcionamento do tema não depende do armazenamento.
+
+    }
+}
+
+
+themeToggle.addEventListener(
+
+    'click',
+
+    () => {
+
+        const modoEscuro =
+            document.body.classList.contains(
+                'dark-mode'
+            );
+
+
+        const novoTema =
+            modoEscuro
+                ? 'light'
+                : 'dark';
+
+
+        aplicarTema(
+            novoTema
+        );
+
+
+        salvarTema(
+            novoTema
+        );
+
+    }
+
 );
 
 
 /* =========================================================
-   FUNÇÕES DISPONÍVEIS GLOBALMENTE
+   INICIALIZAÇÃO DO TEMA
+   ========================================================= */
+
+aplicarTema(
+    obterTemaInicial()
+);
+
+
+/* =========================================================
+   FUNÇÕES DISPONÍVEIS PARA OUTROS MÓDULOS
    ========================================================= */
 
 window.obterDescricaoClima =
@@ -1378,10 +2117,14 @@ window.buscarClimaAtual =
     buscarClimaAtual;
 
 
+window.buscarLocalizacao =
+    buscarLocalizacao;
+
+
 /* =========================================================
-   INICIALIZAÇÃO
+   FINALIZAÇÃO
    ========================================================= */
 
 console.log(
     'api.js carregado com sucesso.'
-);  
+);

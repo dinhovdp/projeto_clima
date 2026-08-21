@@ -9,6 +9,9 @@
 
 const LIMITE_COMPARACAO = 5;
 
+const CHAVE_STORAGE_COMPARACAO =
+    'clima_comparacoes';
+
 
 /* =========================================================
    LISTA DE CIDADES COMPARADAS
@@ -21,116 +24,22 @@ let cidadesComparadas = [];
    ELEMENTOS DA INTERFACE
    ========================================================= */
 
-let comparisonSection =
+const comparisonSection =
     document.getElementById(
         'comparison-section'
     );
 
 
-let comparisonContainer =
+const comparisonContainer =
     document.getElementById(
         'comparison-container'
     );
 
 
-let addComparisonButton =
+const addComparisonButton =
     document.getElementById(
         'add-comparison'
     );
-
-
-/* =========================================================
-   CRIAÇÃO DA ÁREA DE COMPARAÇÃO
-   ========================================================= */
-
-/*
-   Caso o index.html ainda não possua
-   a estrutura de comparação, o JavaScript
-   cria automaticamente.
-
-   Isso evita que a aplicação quebre
-   durante a transição da estrutura antiga
-   para a nova.
-*/
-
-function garantirEstruturaComparacao() {
-
-    if (
-        !comparisonSection
-    ) {
-
-        comparisonSection =
-            document.createElement(
-                'section'
-            );
-
-
-        comparisonSection.id =
-            'comparison-section';
-
-
-        comparisonSection.className =
-            'comparison-section hidden';
-
-
-        comparisonSection.innerHTML = `
-
-            <div class="comparison-header">
-
-                <h2>
-                    Comparação de cidades
-                </h2>
-
-            </div>
-
-            <div
-                id="comparison-container"
-                class="comparison-container"
-            ></div>
-
-        `;
-
-
-        const weatherResult =
-            document.getElementById(
-                'weather-result'
-            );
-
-
-        if (weatherResult) {
-
-            weatherResult.appendChild(
-                comparisonSection
-            );
-
-        } else {
-
-            document.body.appendChild(
-                comparisonSection
-            );
-        }
-    }
-
-
-    comparisonContainer =
-        document.getElementById(
-            'comparison-container'
-        );
-
-
-    /*
-       Procura novamente o botão caso
-       ele já exista no HTML.
-    */
-
-    addComparisonButton =
-        document.getElementById(
-            'add-comparison'
-        );
-}
-
-
-garantirEstruturaComparacao();
 
 
 /* =========================================================
@@ -142,41 +51,22 @@ function mostrarNotificacao(
     tipo = 'sucesso'
 ) {
 
-    let toast =
+    const toast =
         document.getElementById(
             'weather-toast'
         );
 
 
-    /*
-       Cria o elemento caso ainda
-       não exista no index.html.
-    */
+    if (
+        !toast
+    ) {
 
-    if (!toast) {
-
-        toast =
-            document.createElement(
-                'div'
-            );
-
-
-        toast.id =
-            'weather-toast';
-
-
-        toast.className =
-            'weather-toast';
-
-
-        document.body.appendChild(
-            toast
-        );
+        return;
     }
 
 
     toast.textContent =
-        mensagem;
+        String(mensagem);
 
 
     toast.classList.remove(
@@ -204,23 +94,16 @@ function mostrarNotificacao(
     }
 
 
-    /*
-       Força a animação de entrada.
-    */
+    requestAnimationFrame(
+        () => {
 
-    requestAnimationFrame(() => {
+            toast.classList.add(
+                'show'
+            );
 
-        toast.classList.add(
-            'show'
-        );
+        }
+    );
 
-    });
-
-
-    /*
-       Remove a notificação
-       depois de 3 segundos.
-    */
 
     clearTimeout(
         toast._timeout
@@ -228,73 +111,457 @@ function mostrarNotificacao(
 
 
     toast._timeout =
-        setTimeout(() => {
+        setTimeout(
+            () => {
 
-            toast.classList.remove(
-                'show'
-            );
+                toast.classList.remove(
+                    'show'
+                );
 
-        }, 3000);
+            },
+            3000
+        );
 }
 
 
 /* =========================================================
-   OBTER DADOS DA CIDADE ATUAL
+   VALIDAÇÃO NUMÉRICA
    ========================================================= */
 
-/*
-   Esta função recebe:
+function numeroValido(
+    valor
+) {
 
-   cidadeEncontrada
-   climaAtual
+    return Number.isFinite(
+        Number(valor)
+    );
+}
 
-   e transforma os dados no formato
-   usado pelos cards de comparação.
-*/
+
+/* =========================================================
+   NORMALIZAÇÃO DE TEXTO
+   ========================================================= */
+
+function normalizarTexto(
+    valor
+) {
+
+    if (
+        typeof valor !== 'string'
+    ) {
+
+        return '';
+    }
+
+
+    return valor
+        .trim()
+        .replace(
+            /\s+/g,
+            ' '
+        );
+}
+
+
+/* =========================================================
+   CRIAÇÃO DO ID
+   ========================================================= */
+
+function criarIdCidade(
+    latitude,
+    longitude
+) {
+
+    return [
+        Number(latitude).toFixed(6),
+        Number(longitude).toFixed(6)
+    ].join(',');
+}
+
+
+/* =========================================================
+   VALIDAR CIDADE
+   ========================================================= */
+
+function validarCidadeComparacao(
+    cidade
+) {
+
+    if (
+        !cidade ||
+        typeof cidade !== 'object'
+    ) {
+
+        return false;
+    }
+
+
+    if (
+        !normalizarTexto(
+            cidade.nome
+        )
+    ) {
+
+        return false;
+    }
+
+
+    if (
+        !numeroValido(
+            cidade.latitude
+        ) ||
+        !numeroValido(
+            cidade.longitude
+        )
+    ) {
+
+        return false;
+    }
+
+
+    if (
+        !numeroValido(
+            cidade.temperatura
+        )
+    ) {
+
+        return false;
+    }
+
+
+    return true;
+}
+
+
+/* =========================================================
+   CRIAR DADOS DA COMPARAÇÃO
+   ========================================================= */
 
 function criarDadosComparacao(
     cidadeEncontrada,
     climaAtual
 ) {
 
+    if (
+        !cidadeEncontrada ||
+        !climaAtual
+    ) {
+
+        return null;
+    }
+
+
+    if (
+        !numeroValido(
+            cidadeEncontrada.latitude
+        ) ||
+        !numeroValido(
+            cidadeEncontrada.longitude
+        )
+    ) {
+
+        return null;
+    }
+
+
+    if (
+        !numeroValido(
+            climaAtual.temperature
+        )
+    ) {
+
+        return null;
+    }
+
+
+    const latitude =
+        Number(
+            cidadeEncontrada.latitude
+        );
+
+
+    const longitude =
+        Number(
+            cidadeEncontrada.longitude
+        );
+
+
+    const nome =
+        normalizarTexto(
+            cidadeEncontrada.name
+        );
+
+
+    if (
+        !nome
+    ) {
+
+        return null;
+    }
+
+
     return {
 
         id:
-            `${cidadeEncontrada.latitude},${cidadeEncontrada.longitude}`,
+            criarIdCidade(
+                latitude,
+                longitude
+            ),
 
         nome:
-            cidadeEncontrada.name,
+
+            nome,
 
         pais:
-            cidadeEncontrada.country || '',
+
+            normalizarTexto(
+                cidadeEncontrada.country
+            ),
 
         latitude:
-            cidadeEncontrada.latitude,
+
+            latitude,
 
         longitude:
-            cidadeEncontrada.longitude,
+
+            longitude,
 
         temperatura:
-            climaAtual.temperature,
+
+            Number(
+                climaAtual.temperature
+            ),
 
         sensacao:
-            climaAtual.apparent_temperature ??
-            climaAtual.temperature,
+
+            numeroValido(
+                climaAtual.apparent_temperature
+            )
+                ? Number(
+                    climaAtual.apparent_temperature
+                )
+                : Number(
+                    climaAtual.temperature
+                ),
 
         umidade:
-            climaAtual.relative_humidity_2m ??
-            null,
+
+            numeroValido(
+                climaAtual.relative_humidity_2m
+            )
+                ? Number(
+                    climaAtual.relative_humidity_2m
+                )
+                : null,
 
         vento:
-            climaAtual.windspeed ??
-            0,
+
+            numeroValido(
+                climaAtual.windspeed
+            )
+                ? Number(
+                    climaAtual.windspeed
+                )
+                : null,
 
         weathercode:
-            climaAtual.weathercode,
+
+            Number.isInteger(
+                Number(
+                    climaAtual.weathercode
+                )
+            )
+                ? Number(
+                    climaAtual.weathercode
+                )
+                : null,
 
         is_day:
-            climaAtual.is_day
+
+            climaAtual.is_day === 1
+
     };
+}
+
+
+/* =========================================================
+   VALIDAR LISTA DE COMPARAÇÃO
+   ========================================================= */
+
+function validarListaComparacao(
+    lista
+) {
+
+    if (
+        !Array.isArray(
+            lista
+        )
+    ) {
+
+        return [];
+    }
+
+
+    const listaValida =
+        lista
+            .filter(
+                validarCidadeComparacao
+            )
+            .slice(
+                0,
+                LIMITE_COMPARACAO
+            );
+
+
+    const cidadesUnicas =
+        [];
+
+
+    const ids =
+        new Set();
+
+
+    listaValida.forEach(
+        cidade => {
+
+            const id =
+                cidade.id ||
+                criarIdCidade(
+                    cidade.latitude,
+                    cidade.longitude
+                );
+
+
+            if (
+                ids.has(id)
+            ) {
+
+                return;
+            }
+
+
+            ids.add(
+                id
+            );
+
+
+            cidadesUnicas.push({
+
+                ...cidade,
+
+                id:
+
+                    id
+
+            });
+
+        }
+    );
+
+
+    return cidadesUnicas;
+}
+
+
+/* =========================================================
+   SALVAR COMPARAÇÕES
+   ========================================================= */
+
+function salvarComparacoes() {
+
+    try {
+
+        localStorage.setItem(
+
+            CHAVE_STORAGE_COMPARACAO,
+
+            JSON.stringify(
+                cidadesComparadas
+            )
+
+        );
+
+    } catch (
+        erro
+    ) {
+
+        /*
+         * O armazenamento local pode estar
+         * bloqueado pelo navegador ou indisponível.
+         *
+         * A aplicação continua funcionando
+         * normalmente sem persistência.
+         */
+
+        console.warn(
+            'Não foi possível salvar as comparações localmente.',
+            erro
+        );
+    }
+}
+
+
+/* =========================================================
+   CARREGAR COMPARAÇÕES
+   ========================================================= */
+
+function carregarComparacoes() {
+
+    try {
+
+        const dados =
+            localStorage.getItem(
+                CHAVE_STORAGE_COMPARACAO
+            );
+
+
+        if (
+            !dados
+        ) {
+
+            return [];
+        }
+
+
+        const lista =
+            JSON.parse(
+                dados
+            );
+
+
+        return validarListaComparacao(
+            lista
+        );
+
+    } catch (
+        erro
+    ) {
+
+        console.warn(
+            'Não foi possível carregar as comparações salvas.',
+            erro
+        );
+
+
+        try {
+
+            localStorage.removeItem(
+                CHAVE_STORAGE_COMPARACAO
+            );
+
+        } catch (
+            erroStorage
+        ) {
+
+            console.warn(
+                'Não foi possível limpar o armazenamento da comparação.',
+                erroStorage
+            );
+        }
+
+
+        return [];
+    }
 }
 
 
@@ -308,14 +575,18 @@ function adicionarCidadeComparacao(
 ) {
 
     if (
-        !cidadeEncontrada ||
-        !climaAtual
+        cidadesComparadas.length >=
+        LIMITE_COMPARACAO
     ) {
 
         mostrarNotificacao(
-            'Não foi possível adicionar esta cidade.',
-            'erro'
+            'Você pode comparar no máximo 5 cidades.',
+            'aviso'
         );
+
+
+        atualizarEstadoBotao();
+
 
         return false;
     }
@@ -328,14 +599,25 @@ function adicionarCidadeComparacao(
         );
 
 
-    /* =====================================================
-       VERIFICA CIDADE DUPLICADA
-       ===================================================== */
+    if (
+        !cidade
+    ) {
+
+        mostrarNotificacao(
+            'Os dados desta cidade não são válidos para comparação.',
+            'erro'
+        );
+
+
+        return false;
+    }
+
 
     const cidadeJaExiste =
         cidadesComparadas.some(
             item =>
-                item.id === cidade.id
+                item.id ===
+                cidade.id
         );
 
 
@@ -348,38 +630,23 @@ function adicionarCidadeComparacao(
             'aviso'
         );
 
-        return false;
-    }
-
-
-    /* =====================================================
-       VERIFICA LIMITE
-       ===================================================== */
-
-    if (
-        cidadesComparadas.length >=
-        LIMITE_COMPARACAO
-    ) {
-
-        mostrarNotificacao(
-            'Você pode comparar no máximo 5 cidades.',
-            'aviso'
-        );
 
         return false;
     }
 
-
-    /* =====================================================
-       ADICIONA
-       ===================================================== */
 
     cidadesComparadas.push(
         cidade
     );
 
 
+    salvarComparacoes();
+
+
     renderizarComparacoes();
+
+
+    atualizarEstadoBotao();
 
 
     mostrarNotificacao(
@@ -399,21 +666,50 @@ function removerCidadeComparacao(
     id
 ) {
 
+    if (
+        typeof id !== 'string'
+    ) {
+
+        return;
+    }
+
+
     const cidadeRemovida =
         cidadesComparadas.find(
             cidade =>
-                cidade.id === id
+                cidade.id ===
+                id
         );
+
+
+    const novaLista =
+        cidadesComparadas.filter(
+            cidade =>
+                cidade.id !==
+                id
+        );
+
+
+    if (
+        novaLista.length ===
+        cidadesComparadas.length
+    ) {
+
+        return;
+    }
 
 
     cidadesComparadas =
-        cidadesComparadas.filter(
-            cidade =>
-                cidade.id !== id
-        );
+        novaLista;
+
+
+    salvarComparacoes();
 
 
     renderizarComparacoes();
+
+
+    atualizarEstadoBotao();
 
 
     if (
@@ -428,74 +724,88 @@ function removerCidadeComparacao(
 
 
 /* =========================================================
-   RENDERIZAR COMPARAÇÕES
+   CRIAR ELEMENTO
    ========================================================= */
 
-function renderizarComparacoes() {
+function criarElementoComparacao(
+    elemento,
+    classe,
+    texto
+) {
+
+    const novoElemento =
+        document.createElement(
+            elemento
+        );
+
 
     if (
-        !comparisonContainer
+        classe
     ) {
 
-        return;
-    }
-
-
-    comparisonContainer.innerHTML =
-        '';
-
-
-    /*
-       Não existem cidades.
-    */
-
-    if (
-        cidadesComparadas.length === 0
-    ) {
-
-        if (
-            comparisonSection
-        ) {
-
-            comparisonSection.classList.add(
-                'hidden'
-            );
-        }
-
-
-        return;
-    }
-
-
-    /*
-       Existem cidades.
-    */
-
-    if (
-        comparisonSection
-    ) {
-
-        comparisonSection.classList.remove(
-            'hidden'
+        novoElemento.classList.add(
+            classe
         );
     }
 
 
-    cidadesComparadas.forEach(
-        cidade => {
-
-            const card =
-                criarCardComparacao(
-                    cidade
-                );
+    novoElemento.textContent =
+        String(
+            texto ?? ''
+        );
 
 
-            comparisonContainer.appendChild(
-                card
-            );
+    return novoElemento;
+}
 
-        }
+
+/* =========================================================
+   CRIAR DETALHE
+   ========================================================= */
+
+function criarDetalheComparacao(
+    nome,
+    valor
+) {
+
+    const detalhe =
+        document.createElement(
+            'div'
+        );
+
+
+    detalhe.classList.add(
+        'comparison-detail'
     );
+
+
+    const nomeElemento =
+        criarElementoComparacao(
+            'span',
+            '',
+            nome
+        );
+
+
+    const valorElemento =
+        criarElementoComparacao(
+            'strong',
+            '',
+            valor
+        );
+
+
+    detalhe.appendChild(
+        nomeElemento
+    );
+
+
+    detalhe.appendChild(
+        valorElemento
+    );
+
+
+    return detalhe;
 }
 
 
@@ -513,207 +823,447 @@ function criarCardComparacao(
         );
 
 
-    card.className =
-        'comparison-card';
+    card.classList.add(
+        'comparison-card'
+    );
 
 
-    /*
-       Descrição do clima.
+    card.setAttribute(
+        'aria-label',
+        `Comparação climática de ${cidade.nome}`
+    );
 
-       A função pertence ao api.js.
-    */
+
+    /* =====================================================
+       BOTÃO REMOVER
+       ===================================================== */
+
+    const removeButton =
+        document.createElement(
+            'button'
+        );
+
+
+    removeButton.type =
+        'button';
+
+
+    removeButton.classList.add(
+        'remove-comparison'
+    );
+
+
+    removeButton.setAttribute(
+        'aria-label',
+        `Remover ${cidade.nome} da comparação`
+    );
+
+
+    removeButton.title =
+        'Remover cidade';
+
+
+    removeButton.textContent =
+        '×';
+
+
+    removeButton.dataset.id =
+        cidade.id;
+
+
+    /* =====================================================
+       CIDADE
+       ===================================================== */
+
+    const cityElement =
+        document.createElement(
+            'div'
+        );
+
+
+    cityElement.classList.add(
+        'comparison-city'
+    );
+
+
+    cityElement.textContent =
+        cidade.nome;
+
+
+    if (
+        cidade.pais
+    ) {
+
+        const countryElement =
+            document.createElement(
+                'small'
+            );
+
+
+        countryElement.textContent =
+            cidade.pais;
+
+
+        cityElement.appendChild(
+            countryElement
+        );
+    }
+
+
+    /* =====================================================
+       DESCRIÇÃO
+       ===================================================== */
 
     let descricao =
         'Condição desconhecida';
 
 
     if (
-        typeof obterDescricaoClima ===
+        typeof window.obterDescricaoClima ===
         'function'
     ) {
 
         descricao =
-            obterDescricaoClima(
+            window.obterDescricaoClima(
                 cidade.weathercode
             );
     }
 
 
-    /*
-       Ícone.
-
-       Também aproveita a função
-       existente no api.js.
-    */
+    /* =====================================================
+       ÍCONE
+       ===================================================== */
 
     let icone =
         '🌤️';
 
 
     if (
-        typeof obterIconeClima ===
+        typeof window.obterIconeClima ===
         'function'
     ) {
 
         icone =
-            obterIconeClima(
+            window.obterIconeClima(
+
                 cidade.weathercode,
-                cidade.is_day
+
+                cidade.is_day ? 1 : 0
+
             );
     }
 
 
-    /*
-       Umidade.
-
-       Caso a API não tenha retornado,
-       mostramos "--".
-    */
-
-    const umidade =
-        cidade.umidade !== null &&
-        cidade.umidade !== undefined
-            ? `${cidade.umidade}%`
-            : '--';
-
-
-    /*
-       Sensação térmica.
-    */
-
-    const sensacao =
-        cidade.sensacao !== null &&
-        cidade.sensacao !== undefined
-            ? `${cidade.sensacao}°C`
-            : '--';
-
-
-    /*
-       Velocidade do vento.
-    */
-
-    const vento =
-        cidade.vento !== null &&
-        cidade.vento !== undefined
-            ? `${cidade.vento} km/h`
-            : '--';
-
-
-    card.innerHTML = `
-
-        <button
-            type="button"
-            class="remove-comparison"
-            data-id="${cidade.id}"
-            aria-label="Remover ${cidade.nome}"
-            title="Remover cidade"
-        >
-            ×
-        </button>
-
-
-        <div class="comparison-city">
-
-            ${cidade.nome}
-
-            ${
-                cidade.pais
-                    ? `<small>${cidade.pais}</small>`
-                    : ''
-            }
-
-        </div>
-
-
-        <div class="comparison-icon">
-
-            ${icone}
-
-        </div>
-
-
-        <div class="comparison-temperature">
-
-            ${cidade.temperatura}°C
-
-        </div>
-
-
-        <div class="comparison-description">
-
-            ${descricao}
-
-        </div>
-
-
-        <div class="comparison-details">
-
-            <div class="comparison-detail">
-
-                <span>
-                    Sensação
-                </span>
-
-                <strong>
-                    ${sensacao}
-                </strong>
-
-            </div>
-
-
-            <div class="comparison-detail">
-
-                <span>
-                    Umidade
-                </span>
-
-                <strong>
-                    ${umidade}
-                </strong>
-
-            </div>
-
-
-            <div class="comparison-detail">
-
-                <span>
-                    Vento
-                </span>
-
-                <strong>
-                    ${vento}
-                </strong>
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    /*
-       Evento para remover.
-    */
-
-    const removeButton =
-        card.querySelector(
-            '.remove-comparison'
+    const iconElement =
+        criarElementoComparacao(
+            'div',
+            'comparison-icon',
+            icone
         );
 
 
-    removeButton.addEventListener(
-        'click',
-        () => {
+    iconElement.setAttribute(
+        'aria-hidden',
+        'true'
+    );
 
-            removerCidadeComparacao(
-                cidade.id
+
+    /* =====================================================
+       TEMPERATURA
+       ===================================================== */
+
+    const temperatura =
+        criarElementoComparacao(
+
+            'div',
+
+            'comparison-temperature',
+
+            `${Math.round(
+                cidade.temperatura
+            )}°C`
+
+        );
+
+
+    /* =====================================================
+       DESCRIÇÃO
+       ===================================================== */
+
+    const descricaoElement =
+        criarElementoComparacao(
+
+            'div',
+
+            'comparison-description',
+
+            descricao
+
+        );
+
+
+    /* =====================================================
+       DETALHES
+       ===================================================== */
+
+    const details =
+        document.createElement(
+            'div'
+        );
+
+
+    details.classList.add(
+        'comparison-details'
+    );
+
+
+    const sensacao =
+        numeroValido(
+            cidade.sensacao
+        )
+            ? `${Math.round(
+                cidade.sensacao
+            )}°C`
+            : '--';
+
+
+    const umidade =
+        numeroValido(
+            cidade.umidade
+        )
+            ? `${Math.round(
+                cidade.umidade
+            )}%`
+            : '--';
+
+
+    const vento =
+        numeroValido(
+            cidade.vento
+        )
+            ? `${Math.round(
+                cidade.vento
+            )} km/h`
+            : '--';
+
+
+    details.appendChild(
+        criarDetalheComparacao(
+            'Sensação',
+            sensacao
+        )
+    );
+
+
+    details.appendChild(
+        criarDetalheComparacao(
+            'Umidade',
+            umidade
+        )
+    );
+
+
+    details.appendChild(
+        criarDetalheComparacao(
+            'Vento',
+            vento
+        )
+    );
+
+
+    /* =====================================================
+       MONTAGEM
+       ===================================================== */
+
+    card.appendChild(
+        removeButton
+    );
+
+
+    card.appendChild(
+        cityElement
+    );
+
+
+    card.appendChild(
+        iconElement
+    );
+
+
+    card.appendChild(
+        temperatura
+    );
+
+
+    card.appendChild(
+        descricaoElement
+    );
+
+
+    card.appendChild(
+        details
+    );
+
+
+    return card;
+}
+
+
+/* =========================================================
+   RENDERIZAR COMPARAÇÕES
+   ========================================================= */
+
+function renderizarComparacoes() {
+
+    if (
+        !comparisonContainer ||
+        !comparisonSection
+    ) {
+
+        return;
+    }
+
+
+    comparisonContainer.replaceChildren();
+
+
+    if (
+        cidadesComparadas.length === 0
+    ) {
+
+        comparisonSection.classList.add(
+            'hidden'
+        );
+
+
+        return;
+    }
+
+
+    comparisonSection.classList.remove(
+        'hidden'
+    );
+
+
+    const fragment =
+        document.createDocumentFragment();
+
+
+    cidadesComparadas.forEach(
+        cidade => {
+
+            const card =
+                criarCardComparacao(
+                    cidade
+                );
+
+
+            fragment.appendChild(
+                card
             );
 
         }
     );
 
 
-    return card;
+    comparisonContainer.appendChild(
+        fragment
+    );
+}
+
+
+/* =========================================================
+   EVENTO DE REMOÇÃO
+   ========================================================= */
+
+function configurarRemocaoComparacao() {
+
+    if (
+        !comparisonContainer
+    ) {
+
+        return;
+    }
+
+
+    comparisonContainer.addEventListener(
+        'click',
+        evento => {
+
+            const botao =
+                evento.target.closest(
+                    '.remove-comparison'
+                );
+
+
+            if (
+                !botao ||
+                !comparisonContainer.contains(
+                    botao
+                )
+            ) {
+
+                return;
+            }
+
+
+            const id =
+                botao.dataset.id;
+
+
+            removerCidadeComparacao(
+                id
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   ESTADO DO BOTÃO
+   ========================================================= */
+
+function atualizarEstadoBotao() {
+
+    if (
+        !addComparisonButton
+    ) {
+
+        return;
+    }
+
+
+    const limiteAtingido =
+        cidadesComparadas.length >=
+        LIMITE_COMPARACAO;
+
+
+    addComparisonButton.disabled =
+        limiteAtingido;
+
+
+    if (
+        limiteAtingido
+    ) {
+
+        addComparisonButton.setAttribute(
+            'aria-label',
+            'Limite de cinco cidades atingido'
+        );
+
+        addComparisonButton.title =
+            'Limite de 5 cidades atingido';
+
+    } else {
+
+        addComparisonButton.removeAttribute(
+            'aria-label'
+        );
+
+        addComparisonButton.removeAttribute(
+            'title'
+        );
+    }
 }
 
 
@@ -735,25 +1285,39 @@ function configurarBotaoComparacao() {
         'click',
         () => {
 
-            /*
-               Procura os dados da última
-               cidade pesquisada.
-
-               Essas variáveis serão
-               disponibilizadas pelo api.js.
-            */
-
             if (
-                typeof window.cidadeAtualPesquisada ===
-                'undefined' ||
-                typeof window.climaAtualPesquisado ===
-                'undefined'
+                cidadesComparadas.length >=
+                LIMITE_COMPARACAO
             ) {
 
                 mostrarNotificacao(
-                    'Pesquise uma cidade antes de adicionar à comparação.',
+                    'Você pode comparar no máximo 5 cidades.',
                     'aviso'
                 );
+
+
+                return;
+            }
+
+
+            const cidadeAtual =
+                window.cidadeAtualPesquisada;
+
+
+            const climaAtual =
+                window.climaAtualPesquisado;
+
+
+            if (
+                !cidadeAtual ||
+                !climaAtual
+            ) {
+
+                mostrarNotificacao(
+                    'Pesquise uma cidade antes de adicioná-la à comparação.',
+                    'aviso'
+                );
+
 
                 return;
             }
@@ -761,28 +1325,50 @@ function configurarBotaoComparacao() {
 
             adicionarCidadeComparacao(
 
-                window.cidadeAtualPesquisada,
+                cidadeAtual,
 
-                window.climaAtualPesquisado
+                climaAtual
 
             );
-
         }
     );
 }
 
 
-configurarBotaoComparacao();
+/* =========================================================
+   INICIALIZAÇÃO
+   ========================================================= */
+
+function inicializarComparacao() {
+
+    cidadesComparadas =
+        carregarComparacoes();
+
+
+    renderizarComparacoes();
+
+
+    atualizarEstadoBotao();
+
+
+    configurarRemocaoComparacao();
+
+
+    configurarBotaoComparacao();
+
+
+    console.log(
+        'comparison.js carregado com sucesso.'
+    );
+}
+
+
+inicializarComparacao();
 
 
 /* =========================================================
-   FUNÇÕES PÚBLICAS
+   FUNÇÕES DISPONÍVEIS GLOBALMENTE
    ========================================================= */
-
-/*
-   Disponibiliza a função para
-   outros arquivos JavaScript.
-*/
 
 window.adicionarCidadeComparacao =
     adicionarCidadeComparacao;
@@ -794,12 +1380,3 @@ window.removerCidadeComparacao =
 
 window.renderizarComparacoes =
     renderizarComparacoes;
-
-
-/* =========================================================
-   DEBUG
-   ========================================================= */
-
-console.log(
-    'comparison.js carregado.'
-);

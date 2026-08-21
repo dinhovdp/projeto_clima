@@ -1,22 +1,36 @@
-/* =========================
+/* =========================================================
    PREVISÃO DE 7 DIAS
-   ========================= */
+   ========================================================= */
 
 
-/* =========================
+/* =========================================================
+   CONFIGURAÇÕES
+   ========================================================= */
+
+const QUANTIDADE_MAXIMA_DIAS = 7;
+
+const TEMPO_LIMITE_PREVISAO = 10000;
+
+
+/* =========================================================
    ELEMENTOS DA INTERFACE
-   ========================= */
+   ========================================================= */
 
 const forecastSection =
-    document.getElementById('forecast-section');
+    document.getElementById(
+        'forecast-section'
+    );
+
 
 const forecastContainer =
-    document.getElementById('forecast-container');
+    document.getElementById(
+        'forecast-container'
+    );
 
 
-/* =========================
+/* =========================================================
    DESCRIÇÃO DO CLIMA
-   ========================= */
+   ========================================================= */
 
 function obterDescricaoPrevisao(codigo) {
 
@@ -86,9 +100,9 @@ function obterDescricaoPrevisao(codigo) {
 }
 
 
-/* =========================
+/* =========================================================
    ÍCONE DO CLIMA
-   ========================= */
+   ========================================================= */
 
 function obterIconePrevisao(codigo) {
 
@@ -96,21 +110,17 @@ function obterIconePrevisao(codigo) {
         return '☀️';
     }
 
-
     if (codigo === 1) {
         return '🌤️';
     }
-
 
     if (codigo === 2) {
         return '⛅';
     }
 
-
     if (codigo === 3) {
         return '☁️';
     }
-
 
     if (
         codigo === 45 ||
@@ -119,14 +129,12 @@ function obterIconePrevisao(codigo) {
         return '🌫️';
     }
 
-
     if (
         codigo >= 51 &&
         codigo <= 57
     ) {
         return '🌦️';
     }
-
 
     if (
         codigo >= 61 &&
@@ -135,14 +143,12 @@ function obterIconePrevisao(codigo) {
         return '🌧️';
     }
 
-
     if (
         codigo >= 71 &&
         codigo <= 77
     ) {
         return '❄️';
     }
-
 
     if (
         codigo >= 80 &&
@@ -151,7 +157,6 @@ function obterIconePrevisao(codigo) {
         return '🌦️';
     }
 
-
     if (
         codigo >= 85 &&
         codigo <= 86
@@ -159,19 +164,33 @@ function obterIconePrevisao(codigo) {
         return '❄️';
     }
 
-
     if (codigo >= 95) {
         return '⛈️';
     }
-
 
     return '🌤️';
 }
 
 
-/* =========================
+/* =========================================================
+   VALIDAÇÃO DO CÓDIGO CLIMÁTICO
+   ========================================================= */
+
+function validarCodigoClimatico(codigo) {
+
+    const numero = Number(codigo);
+
+    if (!Number.isInteger(numero)) {
+        return null;
+    }
+
+    return numero;
+}
+
+
+/* =========================================================
    DIA DA SEMANA
-   ========================= */
+   ========================================================= */
 
 function obterDiaSemana(data) {
 
@@ -188,56 +207,126 @@ function obterDiaSemana(data) {
     ];
 
 
+    if (
+        typeof data !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(data)
+    ) {
+        return 'Data inválida';
+    }
+
+
     const dataFormatada =
         new Date(`${data}T12:00:00`);
 
 
-    return dias[dataFormatada.getDay()];
-}
-
-
-/* =========================
-   FORMATAÇÃO DA DATA
-   ========================= */
-
-function formatarData(data) {
-
-    const partes = data.split('-');
-
-
-    if (partes.length !== 3) {
-        return data;
+    if (
+        Number.isNaN(
+            dataFormatada.getTime()
+        )
+    ) {
+        return 'Data inválida';
     }
 
 
-    return `${partes[2]}/${partes[1]}`;
+    return dias[
+        dataFormatada.getDay()
+    ];
 }
 
 
-/* =========================
+/* =========================================================
+   FORMATAÇÃO DA DATA
+   ========================================================= */
+
+function formatarData(data) {
+
+    if (typeof data !== 'string') {
+        return '--/--';
+    }
+
+
+    const partes =
+        data.split('-');
+
+
+    if (partes.length !== 3) {
+        return '--/--';
+    }
+
+
+    const [
+        ano,
+        mes,
+        dia
+    ] = partes;
+
+
+    if (
+        !/^\d{4}$/.test(ano) ||
+        !/^\d{2}$/.test(mes) ||
+        !/^\d{2}$/.test(dia)
+    ) {
+        return '--/--';
+    }
+
+
+    return `${dia}/${mes}`;
+}
+
+
+/* =========================================================
    FORMATAÇÃO DA TEMPERATURA
-   ========================= */
+   ========================================================= */
 
 function formatarTemperatura(temperatura) {
 
-    if (
-        temperatura === null ||
-        temperatura === undefined ||
-        Number.isNaN(Number(temperatura))
-    ) {
+    const numero =
+        Number(temperatura);
+
+
+    if (!Number.isFinite(numero)) {
         return '--';
     }
 
 
-    return Math.round(
-        Number(temperatura)
-    );
+    return Math.round(numero);
 }
 
 
-/* =========================
+/* =========================================================
+   CRIAÇÃO SEGURA DE ELEMENTO
+   ========================================================= */
+
+function criarElemento(
+    elemento,
+    classe,
+    texto
+) {
+
+    const novoElemento =
+        document.createElement(elemento);
+
+
+    if (classe) {
+
+        novoElemento.classList.add(
+            classe
+        );
+
+    }
+
+
+    novoElemento.textContent =
+        texto;
+
+
+    return novoElemento;
+}
+
+
+/* =========================================================
    CRIAR CARD
-   ========================= */
+   ========================================================= */
 
 function criarCardPrevisao(
     data,
@@ -250,7 +339,19 @@ function criarCardPrevisao(
         document.createElement('article');
 
 
-    card.classList.add('forecast-card');
+    card.classList.add(
+        'forecast-card'
+    );
+
+
+    card.setAttribute(
+        'aria-label',
+        `Previsão para ${data}`
+    );
+
+
+    const codigoValidado =
+        validarCodigoClimatico(codigo);
 
 
     const dia =
@@ -262,11 +363,15 @@ function criarCardPrevisao(
 
 
     const icone =
-        obterIconePrevisao(codigo);
+        obterIconePrevisao(
+            codigoValidado
+        );
 
 
     const descricao =
-        obterDescricaoPrevisao(codigo);
+        obterDescricaoPrevisao(
+            codigoValidado
+        );
 
 
     const maxima =
@@ -281,46 +386,164 @@ function criarCardPrevisao(
         );
 
 
-    card.innerHTML = `
+    const diaElemento =
+        criarElemento(
+            'div',
+            'forecast-day',
+            dia
+        );
 
-        <div class="forecast-day">
-            ${dia}
-        </div>
 
-        <div class="forecast-date">
-            ${dataFormatada}
-        </div>
+    const dataElemento =
+        criarElemento(
+            'div',
+            'forecast-date',
+            dataFormatada
+        );
 
-        <div class="forecast-icon">
-            ${icone}
-        </div>
 
-        <div class="forecast-description">
-            ${descricao}
-        </div>
+    const iconeElemento =
+        criarElemento(
+            'div',
+            'forecast-icon',
+            icone
+        );
 
-        <div class="forecast-temperatures">
 
-            <span class="forecast-max">
-                Máx. ${maxima}°C
-            </span>
+    iconeElemento.setAttribute(
+        'aria-hidden',
+        'true'
+    );
 
-            <span class="forecast-min">
-                Mín. ${minima}°C
-            </span>
 
-        </div>
+    const descricaoElemento =
+        criarElemento(
+            'div',
+            'forecast-description',
+            descricao
+        );
 
-    `;
+
+    const temperaturas =
+        document.createElement('div');
+
+
+    temperaturas.classList.add(
+        'forecast-temperatures'
+    );
+
+
+    const maximaElemento =
+        criarElemento(
+            'span',
+            'forecast-max',
+            `Máx. ${maxima}°C`
+        );
+
+
+    const minimaElemento =
+        criarElemento(
+            'span',
+            'forecast-min',
+            `Mín. ${minima}°C`
+        );
+
+
+    temperaturas.appendChild(
+        maximaElemento
+    );
+
+
+    temperaturas.appendChild(
+        minimaElemento
+    );
+
+
+    card.appendChild(
+        diaElemento
+    );
+
+
+    card.appendChild(
+        dataElemento
+    );
+
+
+    card.appendChild(
+        iconeElemento
+    );
+
+
+    card.appendChild(
+        descricaoElemento
+    );
+
+
+    card.appendChild(
+        temperaturas
+    );
 
 
     return card;
 }
 
 
-/* =========================
+/* =========================================================
+   VALIDAR DADOS
+   ========================================================= */
+
+function validarDadosPrevisao(dados) {
+
+    if (
+        !dados ||
+        typeof dados !== 'object'
+    ) {
+        return false;
+    }
+
+
+    if (
+        !dados.daily ||
+        typeof dados.daily !== 'object'
+    ) {
+        return false;
+    }
+
+
+    if (
+        !Array.isArray(
+            dados.daily.time
+        )
+    ) {
+        return false;
+    }
+
+
+    if (
+        !Array.isArray(
+            dados.daily.temperature_2m_max
+        )
+    ) {
+        return false;
+    }
+
+
+    if (
+        !Array.isArray(
+            dados.daily.temperature_2m_min
+        )
+    ) {
+        return false;
+    }
+
+
+    return true;
+}
+
+
+/* =========================================================
    EXIBIR PREVISÃO
-   ========================= */
+   ========================================================= */
 
 function exibirPrevisao(dados) {
 
@@ -328,6 +551,7 @@ function exibirPrevisao(dados) {
         !forecastContainer ||
         !forecastSection
     ) {
+
         console.warn(
             'Elementos da previsão não encontrados no HTML.'
         );
@@ -337,42 +561,67 @@ function exibirPrevisao(dados) {
 
 
     if (
-        !dados ||
-        !dados.daily
+        !validarDadosPrevisao(dados)
     ) {
+
         throw new Error(
-            'Dados de previsão não encontrados.'
+            'Dados de previsão inválidos.'
         );
+
     }
 
 
-    forecastContainer.innerHTML = '';
+    forecastContainer.replaceChildren();
 
 
     const datas =
-        dados.daily.time || [];
+        dados.daily.time;
 
 
     const temperaturasMaximas =
-        dados.daily.temperature_2m_max || [];
+        dados.daily.temperature_2m_max;
 
 
     const temperaturasMinimas =
-        dados.daily.temperature_2m_min || [];
+        dados.daily.temperature_2m_min;
 
 
-    /*
-     * A API pode retornar weather_code
-     * ou weathercode dependendo da configuração.
-     */
     const codigos =
-        dados.daily.weather_code ||
-        dados.daily.weathercode ||
-        [];
+        Array.isArray(
+            dados.daily.weather_code
+        )
+            ? dados.daily.weather_code
+            : (
+                Array.isArray(
+                    dados.daily.weathercode
+                )
+                    ? dados.daily.weathercode
+                    : []
+            );
 
 
     const quantidadeDias =
-        Math.min(datas.length, 7);
+        Math.min(
+
+            datas.length,
+
+            temperaturasMaximas.length,
+
+            temperaturasMinimas.length,
+
+            QUANTIDADE_MAXIMA_DIAS
+
+        );
+
+
+    if (quantidadeDias === 0) {
+
+        forecastSection.classList.add(
+            'hidden'
+        );
+
+        return;
+    }
 
 
     for (
@@ -395,7 +644,10 @@ function exibirPrevisao(dados) {
             );
 
 
-        forecastContainer.appendChild(card);
+        forecastContainer.appendChild(
+            card
+        );
+
     }
 
 
@@ -405,33 +657,174 @@ function exibirPrevisao(dados) {
 }
 
 
-/* =========================
+/* =========================================================
+   CRIAR URL
+   ========================================================= */
+
+function criarUrlPrevisao(
+    latitude,
+    longitude
+) {
+
+    const numeroLatitude =
+        Number(latitude);
+
+
+    const numeroLongitude =
+        Number(longitude);
+
+
+    if (
+        !Number.isFinite(numeroLatitude) ||
+        !Number.isFinite(numeroLongitude)
+    ) {
+
+        throw new Error(
+            'Latitude e longitude inválidas.'
+        );
+
+    }
+
+
+    if (
+        numeroLatitude < -90 ||
+        numeroLatitude > 90
+    ) {
+
+        throw new Error(
+            'Latitude fora dos limites permitidos.'
+        );
+
+    }
+
+
+    if (
+        numeroLongitude < -180 ||
+        numeroLongitude > 180
+    ) {
+
+        throw new Error(
+            'Longitude fora dos limites permitidos.'
+        );
+
+    }
+
+
+    const url =
+        new URL(
+            'https://api.open-meteo.com/v1/forecast'
+        );
+
+
+    url.searchParams.set(
+        'latitude',
+        String(numeroLatitude)
+    );
+
+
+    url.searchParams.set(
+        'longitude',
+        String(numeroLongitude)
+    );
+
+
+    url.searchParams.set(
+        'daily',
+        'weather_code,temperature_2m_max,temperature_2m_min'
+    );
+
+
+    url.searchParams.set(
+        'timezone',
+        'auto'
+    );
+
+
+    url.searchParams.set(
+        'forecast_days',
+        String(
+            QUANTIDADE_MAXIMA_DIAS
+        )
+    );
+
+
+    return url.toString();
+}
+
+
+/* =========================================================
+   REQUISIÇÃO COM TIMEOUT
+   ========================================================= */
+
+async function buscarComTimeoutPrevisao(
+    url,
+    tempoLimite = TEMPO_LIMITE_PREVISAO
+) {
+
+    const controller =
+        new AbortController();
+
+
+    const timeout =
+        setTimeout(
+            () => {
+                controller.abort();
+            },
+            tempoLimite
+        );
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                url,
+                {
+                    method: 'GET',
+
+                    signal:
+                        controller.signal,
+
+                    headers: {
+                        Accept:
+                            'application/json'
+                    }
+                }
+            );
+
+
+        return resposta;
+
+    } finally {
+
+        clearTimeout(timeout);
+
+    }
+}
+
+
+/* =========================================================
    BUSCAR PREVISÃO
-   ========================= */
+   ========================================================= */
 
 async function buscarPrevisao(
     latitude,
     longitude
 ) {
 
-    if (
-        latitude === undefined ||
-        longitude === undefined
-    ) {
-        throw new Error(
-            'Latitude e longitude são obrigatórias.'
-        );
-    }
-
-
     const url =
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+        criarUrlPrevisao(
+            latitude,
+            longitude
+        );
 
 
     try {
 
         const resposta =
-            await fetch(url);
+            await buscarComTimeoutPrevisao(
+                url
+            );
 
 
         if (!resposta.ok) {
@@ -439,6 +832,7 @@ async function buscarPrevisao(
             throw new Error(
                 'Erro ao consultar a previsão para os próximos dias.'
             );
+
         }
 
 
@@ -447,13 +841,13 @@ async function buscarPrevisao(
 
 
         if (
-            !dados.daily ||
-            !dados.daily.time
+            !validarDadosPrevisao(dados)
         ) {
 
             throw new Error(
                 'Formato de previsão inválido.'
             );
+
         }
 
 
@@ -462,14 +856,56 @@ async function buscarPrevisao(
 
         return dados;
 
-    } catch (error) {
+    } catch (erro) {
+
+        if (
+            erro.name === 'AbortError'
+        ) {
+
+            throw new Error(
+                'A consulta da previsão demorou demais. Tente novamente.'
+            );
+
+        }
+
 
         console.error(
             'Erro na previsão:',
-            error
+            erro
         );
 
 
-        throw error;
+        throw erro;
+
     }
+
 }
+
+
+/* =========================================================
+   FUNÇÕES PÚBLICAS
+   ========================================================= */
+
+window.buscarPrevisao =
+    buscarPrevisao;
+
+
+window.exibirPrevisao =
+    exibirPrevisao;
+
+
+window.obterDescricaoPrevisao =
+    obterDescricaoPrevisao;
+
+
+window.obterIconePrevisao =
+    obterIconePrevisao;
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+   ========================================================= */
+
+console.log(
+    'forecast.js carregado com sucesso.'
+);
