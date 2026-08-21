@@ -735,6 +735,127 @@ function definirFaseDoDia(dataHora) {
 
 
 /* =========================================================
+   CATEGORIA VISUAL DO CLIMA
+   ========================================================= */
+
+/*
+   Traduz o weathercode retornado pela API em uma categoria
+   visual usada pelo fundo dinâmico (classes "clima-*" no
+   CSS). Mantém a mesma agrupagem de faixas já usada em
+   obterIconeClima e obterDescricaoClima, para que o ícone,
+   o texto e o fundo sempre contem a mesma história.
+*/
+
+function obterCategoriaClima(codigo) {
+
+    if (
+        codigo === 0 ||
+        codigo === 1
+    ) {
+
+        return 'limpo';
+
+    }
+
+
+    if (codigo === 2) {
+
+        return 'parcial';
+
+    }
+
+
+    if (
+        codigo === 3 ||
+        codigo === 45 ||
+        codigo === 48
+    ) {
+
+        return 'nublado';
+
+    }
+
+
+    if (
+        (codigo >= 51 && codigo <= 67) ||
+        (codigo >= 80 && codigo <= 82)
+    ) {
+
+        return 'chuva';
+
+    }
+
+
+    if (
+        (codigo >= 71 && codigo <= 77) ||
+        (codigo >= 85 && codigo <= 86)
+    ) {
+
+        return 'neve';
+
+    }
+
+
+    if (
+        codigo >= 95 &&
+        codigo <= 99
+    ) {
+
+        return 'tempestade';
+
+    }
+
+
+    return 'limpo';
+}
+
+
+/* =========================================================
+   FUNDO DE ACORDO COM O CLIMA
+   ========================================================= */
+
+/*
+   Aplica a classe "clima-*" correspondente no <body>, do
+   mesmo jeito que definirFaseDoDia já faz para o horário.
+
+   As regras dessas classes ficam apenas no modo claro: o
+   CSS do modo escuro é declarado depois no arquivo de
+   estilos e por isso sempre prevalece, mantendo o visual
+   azul estático já existente quando o dark mode está ativo.
+*/
+
+function definirClimaFundo(codigo) {
+
+    const categoria =
+        obterCategoriaClima(
+            codigo
+        );
+
+
+    document.body.classList.remove(
+
+        'clima-limpo',
+
+        'clima-parcial',
+
+        'clima-nublado',
+
+        'clima-chuva',
+
+        'clima-neve',
+
+        'clima-tempestade'
+
+    );
+
+
+    document.body.classList.add(
+        `clima-${categoria}`
+    );
+}
+
+
+/* =========================================================
    CACHE
    ========================================================= */
 
@@ -1222,6 +1343,11 @@ function exibirDadosClima(
 
     definirFaseDoDia(
         climaAtual.time
+    );
+
+
+    definirClimaFundo(
+        climaAtual.weathercode
     );
 
 
@@ -2107,6 +2233,14 @@ window.obterDescricaoClima =
 
 window.obterIconeClima =
     obterIconeClima;
+
+
+window.obterCategoriaClima =
+    obterCategoriaClima;
+
+
+window.definirClimaFundo =
+    definirClimaFundo;
 
 
 window.exibirDadosClima =

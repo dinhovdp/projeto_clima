@@ -458,6 +458,256 @@ body.noite .day-background-glow {
 
 
 /* =========================================================
+   TIPOS DE CLIMA
+   ========================================================= */
+
+/*
+   Cada categoria de clima ajusta o mesmo fundo dinâmico já
+   usado nas fases do dia (day-background, day-background-layer,
+   day-background-glow, day-background-particles), variando
+   cor, opacidade e velocidade da animação, mas mantendo os
+   mesmos traços, camadas e keyframes (background-drift,
+   glow-float, particles-drift).
+
+   Regras aplicadas apenas ao modo claro. O bloco do modo
+   escuro (body.dark-mode) é declarado mais abaixo neste
+   arquivo, e por ter a mesma especificidade de seletor,
+   sempre prevalece por ordem de cascata — exatamente como
+   já acontece hoje entre fase-do-dia e modo escuro.
+
+   A categoria é definida pela função definirClimaFundo,
+   em api.js, a partir do weathercode retornado pela API.
+*/
+
+/*
+   Céu limpo
+*/
+
+body.clima-limpo .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #6fc4f2,
+            #bfe8fb,
+            #fef6d8
+        );
+}
+
+
+body.clima-limpo .day-background-glow {
+    background:
+        rgba(255, 214, 92, 0.85);
+
+    filter:
+        blur(22px);
+}
+
+
+/*
+   Parcialmente nublado
+*/
+
+body.clima-parcial .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #8fb8d6,
+            #cfe3ee,
+            #eef3f2
+        );
+}
+
+
+body.clima-parcial .day-background-glow {
+    background:
+        rgba(255, 245, 210, 0.55);
+
+    filter:
+        blur(28px);
+}
+
+
+body.clima-parcial .day-background-particles {
+    opacity:
+        0.28;
+}
+
+
+/*
+   Nublado / neblina
+*/
+
+body.clima-nublado .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #9aa7ad,
+            #c4ccce,
+            #dfe4e2
+        );
+}
+
+
+body.clima-nublado .day-background-layer {
+    animation-duration:
+        26s;
+}
+
+
+body.clima-nublado .day-background-glow {
+    background:
+        rgba(255, 255, 255, 0.35);
+
+    filter:
+        blur(40px);
+
+    opacity:
+        0.55;
+}
+
+
+body.clima-nublado .day-background-particles {
+    opacity:
+        0.18;
+}
+
+
+/*
+   Chuva
+*/
+
+body.clima-chuva .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #4f6d84,
+            #6f8ea3,
+            #a9c1cd
+        );
+}
+
+
+body.clima-chuva .day-background-layer {
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 255, 255, 0.25),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 255, 255, 0.15),
+            transparent 35%
+        );
+}
+
+
+body.clima-chuva .day-background-glow {
+    background:
+        rgba(180, 210, 230, 0.35);
+
+    filter:
+        blur(35px);
+
+    opacity:
+        0.6;
+}
+
+
+body.clima-chuva .day-background-particles {
+    opacity:
+        0.5;
+
+    background-size:
+        40px 60px;
+
+    animation-duration:
+        10s;
+}
+
+
+/*
+   Neve
+*/
+
+body.clima-neve .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #b9c9d6,
+            #e3edf3,
+            #f7fbfd
+        );
+}
+
+
+body.clima-neve .day-background-glow {
+    background:
+        rgba(255, 255, 255, 0.7);
+
+    filter:
+        blur(30px);
+
+    opacity:
+        0.7;
+}
+
+
+body.clima-neve .day-background-particles {
+    opacity:
+        0.55;
+
+    background-size:
+        60px 60px;
+
+    animation-duration:
+        40s;
+}
+
+
+/*
+   Tempestade
+*/
+
+body.clima-tempestade .day-background {
+    background:
+        linear-gradient(
+            135deg,
+            #384252,
+            #4c5a6e,
+            #6b7a8c
+        );
+}
+
+
+body.clima-tempestade .day-background-glow {
+    background:
+        rgba(255, 244, 190, 0.4);
+
+    filter:
+        blur(18px);
+
+    opacity:
+        0.5;
+
+    animation-duration:
+        6s;
+}
+
+
+body.clima-tempestade .day-background-particles {
+    opacity:
+        0.4;
+
+    background-size:
+        50px 70px;
+
+    animation-duration:
+        8s;
+}
+
+
+/* =========================================================
    CONTEÚDO DA APLICAÇÃO
    ========================================================= */
 
