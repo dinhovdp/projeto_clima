@@ -128,6 +128,11 @@
    CABEÇALHO DA LOCALIZAÇÃO
    --------------------------------------------------------- */
 
+.location-header {
+    margin-top:
+        22px;
+}
+
 .location-header h2 {
     margin:
         0 0 5px;

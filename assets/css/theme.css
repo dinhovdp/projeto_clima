@@ -143,7 +143,15 @@ body:not(.dark-mode).clima-nublado
    CLIMA — CHUVA
    ========================================================= */
 
-body:not(.dark-mode).clima-chuva
+body:not(.dark-mode).clima-chuva-leve
+.day-background {
+
+    filter:
+        saturate(0.8)
+        brightness(0.88);
+}
+
+body:not(.dark-mode).clima-chuva-forte
 .day-background {
 
     filter:
@@ -170,6 +178,8 @@ body:not(.dark-mode).clima-neve
    ========================================================= */
 
 body:not(.dark-mode).clima-tempestade
+.day-background,
+body:not(.dark-mode).clima-granizo
 .day-background {
 
     filter:
@@ -250,7 +260,9 @@ body:not(.dark-mode).clima-nublado
    NUVENS — CHUVA
    ========================================================= */
 
-body:not(.dark-mode).clima-chuva
+body:not(.dark-mode).clima-chuva-leve
+.day-background-layer,
+body:not(.dark-mode).clima-chuva-forte
 .day-background-layer {
 
     background:
@@ -282,35 +294,12 @@ body:not(.dark-mode).clima-chuva
 }
 
 
-/* =========================================================
-   CHUVA — PARTÍCULAS
-   ========================================================= */
-
-body:not(.dark-mode).clima-chuva
-.day-background-particles {
-
-    opacity: 0.65;
-
-    background-image:
-
-        repeating-linear-gradient(
-            105deg,
-            transparent 0,
-            transparent 8px,
-            rgba(220, 240, 255, 0.55) 9px,
-            transparent 10px,
-            transparent 18px
-        );
-
-    background-size:
-        45px 45px;
-
-    animation:
-        rain-fall
-        0.8s
-        linear
-        infinite;
-}
+/*
+   As partículas de chuva animadas (gotas caindo de verdade,
+   com respingo) agora são desenhadas pelo weather-canvas.js.
+   O antigo efeito plano via background-position foi removido
+   para não duplicar a animação.
+*/
 
 
 /* =========================================================
@@ -336,32 +325,10 @@ body:not(.dark-mode).clima-neve
 }
 
 
-/* =========================================================
-   NEVE — PARTÍCULAS
-   ========================================================= */
-
-body:not(.dark-mode).clima-neve
-.day-background-particles {
-
-    opacity: 0.8;
-
-    background-image:
-
-        radial-gradient(
-            circle,
-            rgba(255, 255, 255, 0.9) 0 2px,
-            transparent 3px
-        );
-
-    background-size:
-        42px 42px;
-
-    animation:
-        snow-fall
-        8s
-        linear
-        infinite;
-}
+/*
+   Os flocos de neve com profundidade e deriva agora são
+   desenhados pelo weather-canvas.js.
+*/
 
 
 /* =========================================================
@@ -369,6 +336,8 @@ body:not(.dark-mode).clima-neve
    ========================================================= */
 
 body:not(.dark-mode).clima-tempestade
+.day-background-layer,
+body:not(.dark-mode).clima-granizo
 .day-background-layer {
 
     background:
@@ -394,35 +363,10 @@ body:not(.dark-mode).clima-tempestade
 }
 
 
-/* =========================================================
-   TEMPESTADE — CHUVA
-   ========================================================= */
-
-body:not(.dark-mode).clima-tempestade
-.day-background-particles {
-
-    opacity: 0.8;
-
-    background-image:
-
-        repeating-linear-gradient(
-            105deg,
-            transparent 0,
-            transparent 7px,
-            rgba(210, 225, 240, 0.65) 8px,
-            transparent 10px,
-            transparent 16px
-        );
-
-    background-size:
-        40px 40px;
-
-    animation:
-        rain-fall
-        0.55s
-        linear
-        infinite;
-}
+/*
+   A chuva pesada da tempestade agora é desenhada pelo
+   weather-canvas.js, junto com o raio (bolt) real.
+*/
 
 
 /* =========================================================
@@ -430,6 +374,8 @@ body:not(.dark-mode).clima-tempestade
    ========================================================= */
 
 body:not(.dark-mode).clima-tempestade
+.day-background-glow,
+body:not(.dark-mode).clima-granizo
 .day-background-glow {
 
     background:

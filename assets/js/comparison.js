@@ -1,498 +1,98 @@
 /* =========================================================
    COMPARAÇÃO DE CIDADES
+   =========================================================
+
+   Compatibilidade:
+
+   - Navegador / Live Server
+   - GitHub Pages
+   - ES Modules
+
+   Dependência:
+   - weather.js
+
+   Responsabilidades:
+
+   - Adicionar cidades à comparação
+   - Buscar clima das cidades
+   - Evitar cidades duplicadas
+   - Limitar comparação a 5 cidades
+   - Renderizar cards
+   - Remover cidades
+   - Limpar comparação
+   - Controlar requisições concorrentes
+   - Integrar o botão "Adicionar comparação"
+
    ========================================================= */
 
 
 /* =========================================================
-   CONFIGURAÇÃO
+   DEPENDÊNCIA WEATHER
    ========================================================= */
 
-const LIMITE_COMPARACAO = 5;
-
-const CHAVE_STORAGE_COMPARACAO =
-    'clima_comparacoes';
+import {
+    buscarClimaAtual,
+    obterDescricaoClimaWeather,
+    obterIconeClimaWeather,
+    numeroValidoWeather
+} from './weather.js';
 
 
 /* =========================================================
-   LISTA DE CIDADES COMPARADAS
+   CONFIGURAÇÕES
    ========================================================= */
 
-let cidadesComparadas = [];
+const COMPARACAO_MAXIMO_CIDADES =
+    5;
+
+const COMPARACAO_MAXIMO_REQUISICOES =
+    3;
+
+const COMPARACAO_CHAVE_STORAGE =
+    'clima_api_comparacoes';
 
 
 /* =========================================================
-   ELEMENTOS DA INTERFACE
+   PERSISTÊNCIA (localStorage)
+   =========================================================
+
+   Funcionalidade recuperada do projeto anterior à
+   modularização: a lista de cidades comparadas sobrevive a
+   um recarregamento de página. Se o localStorage estiver
+   indisponível ou os dados salvos estiverem corrompidos, a
+   aplicação simplesmente continua com a comparação vazia —
+   nunca quebra por causa disso.
    ========================================================= */
 
-const comparisonSection =
-    document.getElementById(
-        'comparison-section'
-    );
-
-
-const comparisonContainer =
-    document.getElementById(
-        'comparison-container'
-    );
-
-
-const addComparisonButton =
-    document.getElementById(
-        'add-comparison'
-    );
-
-
-/* =========================================================
-   NOTIFICAÇÃO
-   ========================================================= */
-
-function mostrarNotificacao(
-    mensagem,
-    tipo = 'sucesso'
-) {
-
-    const toast =
-        document.getElementById(
-            'weather-toast'
-        );
-
-
-    if (
-        !toast
-    ) {
-
-        return;
-    }
-
-
-    toast.textContent =
-        String(mensagem);
-
-
-    toast.classList.remove(
-        'error',
-        'warning',
-        'show'
-    );
-
-
-    if (
-        tipo === 'erro'
-    ) {
-
-        toast.classList.add(
-            'error'
-        );
-
-    } else if (
-        tipo === 'aviso'
-    ) {
-
-        toast.classList.add(
-            'warning'
-        );
-    }
-
-
-    requestAnimationFrame(
-        () => {
-
-            toast.classList.add(
-                'show'
-            );
-
-        }
-    );
-
-
-    clearTimeout(
-        toast._timeout
-    );
-
-
-    toast._timeout =
-        setTimeout(
-            () => {
-
-                toast.classList.remove(
-                    'show'
-                );
-
-            },
-            3000
-        );
-}
-
-
-/* =========================================================
-   VALIDAÇÃO NUMÉRICA
-   ========================================================= */
-
-function numeroValido(
-    valor
-) {
-
-    return Number.isFinite(
-        Number(valor)
-    );
-}
-
-
-/* =========================================================
-   NORMALIZAÇÃO DE TEXTO
-   ========================================================= */
-
-function normalizarTexto(
-    valor
-) {
-
-    if (
-        typeof valor !== 'string'
-    ) {
-
-        return '';
-    }
-
-
-    return valor
-        .trim()
-        .replace(
-            /\s+/g,
-            ' '
-        );
-}
-
-
-/* =========================================================
-   CRIAÇÃO DO ID
-   ========================================================= */
-
-function criarIdCidade(
-    latitude,
-    longitude
-) {
-
-    return [
-        Number(latitude).toFixed(6),
-        Number(longitude).toFixed(6)
-    ].join(',');
-}
-
-
-/* =========================================================
-   VALIDAR CIDADE
-   ========================================================= */
-
-function validarCidadeComparacao(
-    cidade
-) {
-
-    if (
-        !cidade ||
-        typeof cidade !== 'object'
-    ) {
-
-        return false;
-    }
-
-
-    if (
-        !normalizarTexto(
-            cidade.nome
-        )
-    ) {
-
-        return false;
-    }
-
-
-    if (
-        !numeroValido(
-            cidade.latitude
-        ) ||
-        !numeroValido(
-            cidade.longitude
-        )
-    ) {
-
-        return false;
-    }
-
-
-    if (
-        !numeroValido(
-            cidade.temperatura
-        )
-    ) {
-
-        return false;
-    }
-
-
-    return true;
-}
-
-
-/* =========================================================
-   CRIAR DADOS DA COMPARAÇÃO
-   ========================================================= */
-
-function criarDadosComparacao(
-    cidadeEncontrada,
-    climaAtual
-) {
-
-    if (
-        !cidadeEncontrada ||
-        !climaAtual
-    ) {
-
-        return null;
-    }
-
-
-    if (
-        !numeroValido(
-            cidadeEncontrada.latitude
-        ) ||
-        !numeroValido(
-            cidadeEncontrada.longitude
-        )
-    ) {
-
-        return null;
-    }
-
-
-    if (
-        !numeroValido(
-            climaAtual.temperature
-        )
-    ) {
-
-        return null;
-    }
-
-
-    const latitude =
-        Number(
-            cidadeEncontrada.latitude
-        );
-
-
-    const longitude =
-        Number(
-            cidadeEncontrada.longitude
-        );
-
-
-    const nome =
-        normalizarTexto(
-            cidadeEncontrada.name
-        );
-
-
-    if (
-        !nome
-    ) {
-
-        return null;
-    }
-
-
-    return {
-
-        id:
-            criarIdCidade(
-                latitude,
-                longitude
-            ),
-
-        nome:
-
-            nome,
-
-        pais:
-
-            normalizarTexto(
-                cidadeEncontrada.country
-            ),
-
-        latitude:
-
-            latitude,
-
-        longitude:
-
-            longitude,
-
-        temperatura:
-
-            Number(
-                climaAtual.temperature
-            ),
-
-        sensacao:
-
-            numeroValido(
-                climaAtual.apparent_temperature
-            )
-                ? Number(
-                    climaAtual.apparent_temperature
-                )
-                : Number(
-                    climaAtual.temperature
-                ),
-
-        umidade:
-
-            numeroValido(
-                climaAtual.relative_humidity_2m
-            )
-                ? Number(
-                    climaAtual.relative_humidity_2m
-                )
-                : null,
-
-        vento:
-
-            numeroValido(
-                climaAtual.windspeed
-            )
-                ? Number(
-                    climaAtual.windspeed
-                )
-                : null,
-
-        weathercode:
-
-            Number.isInteger(
-                Number(
-                    climaAtual.weathercode
-                )
-            )
-                ? Number(
-                    climaAtual.weathercode
-                )
-                : null,
-
-        is_day:
-
-            climaAtual.is_day === 1
-
-    };
-}
-
-
-/* =========================================================
-   VALIDAR LISTA DE COMPARAÇÃO
-   ========================================================= */
-
-function validarListaComparacao(
+function validarListaComparacaoArmazenada(
     lista
 ) {
-
-    if (
-        !Array.isArray(
-            lista
-        )
-    ) {
-
+    if (!Array.isArray(lista)) {
         return [];
     }
 
-
-    const listaValida =
-        lista
-            .filter(
-                validarCidadeComparacao
-            )
-            .slice(
-                0,
-                LIMITE_COMPARACAO
-            );
-
-
-    const cidadesUnicas =
-        [];
-
-
-    const ids =
-        new Set();
-
-
-    listaValida.forEach(
-        cidade => {
-
-            const id =
-                cidade.id ||
-                criarIdCidade(
-                    cidade.latitude,
-                    cidade.longitude
-                );
-
-
-            if (
-                ids.has(id)
-            ) {
-
-                return;
-            }
-
-
-            ids.add(
-                id
-            );
-
-
-            cidadesUnicas.push({
-
-                ...cidade,
-
-                id:
-
-                    id
-
-            });
-
-        }
+    return lista.filter(
+        (item) =>
+            item &&
+            typeof item === 'object' &&
+            item.cidade &&
+            localizacaoValidaComparacao(item.cidade) &&
+            item.clima &&
+            typeof item.clima === 'object'
     );
-
-
-    return cidadesUnicas;
 }
 
-
-/* =========================================================
-   SALVAR COMPARAÇÕES
-   ========================================================= */
-
 function salvarComparacoes() {
+    if (typeof localStorage === 'undefined') {
+        return;
+    }
 
     try {
-
         localStorage.setItem(
-
-            CHAVE_STORAGE_COMPARACAO,
-
-            JSON.stringify(
-                cidadesComparadas
-            )
-
+            COMPARACAO_CHAVE_STORAGE,
+            JSON.stringify(cidadesComparadas)
         );
-
-    } catch (
-        erro
-    ) {
-
-        /*
-         * O armazenamento local pode estar
-         * bloqueado pelo navegador ou indisponível.
-         *
-         * A aplicação continua funcionando
-         * normalmente sem persistência.
-         */
-
+    } catch (erro) {
         console.warn(
             'Não foi possível salvar as comparações localmente.',
             erro
@@ -500,65 +100,37 @@ function salvarComparacoes() {
     }
 }
 
-
-/* =========================================================
-   CARREGAR COMPARAÇÕES
-   ========================================================= */
-
 function carregarComparacoes() {
+    if (typeof localStorage === 'undefined') {
+        return [];
+    }
 
     try {
-
         const dados =
             localStorage.getItem(
-                CHAVE_STORAGE_COMPARACAO
+                COMPARACAO_CHAVE_STORAGE
             );
 
-
-        if (
-            !dados
-        ) {
-
+        if (!dados) {
             return [];
         }
 
-
-        const lista =
-            JSON.parse(
-                dados
-            );
-
-
-        return validarListaComparacao(
-            lista
+        return validarListaComparacaoArmazenada(
+            JSON.parse(dados)
         );
-
-    } catch (
-        erro
-    ) {
-
+    } catch (erro) {
         console.warn(
             'Não foi possível carregar as comparações salvas.',
             erro
         );
 
-
         try {
-
             localStorage.removeItem(
-                CHAVE_STORAGE_COMPARACAO
+                COMPARACAO_CHAVE_STORAGE
             );
-
-        } catch (
-            erroStorage
-        ) {
-
-            console.warn(
-                'Não foi possível limpar o armazenamento da comparação.',
-                erroStorage
-            );
+        } catch (erroStorage) {
+            /* Sem localStorage, não há o que limpar. */
         }
-
 
         return [];
     }
@@ -566,817 +138,1643 @@ function carregarComparacoes() {
 
 
 /* =========================================================
+   ESTADO
+   ========================================================= */
+
+let cidadesComparadas =
+    carregarComparacoes();
+
+let idComparacaoAtual = 0;
+
+
+/* =========================================================
+   ELEMENTOS
+   ========================================================= */
+
+function obterElementoComparacao(
+    id
+) {
+    if (
+        typeof document === 'undefined'
+    ) {
+        return null;
+    }
+
+    return document.getElementById(
+        id
+    );
+}
+
+
+/* =========================================================
+   CONTAINER PRINCIPAL / LISTA DE CARDS
+   =========================================================
+
+   O HTML atual usa:
+
+   <section id="comparison-section">
+       ...
+       <div id="comparison-list"></div>
+   </section>
+
+   Mantemos "comparison-container" como alias de
+   compatibilidade, caso uma versão anterior do HTML
+   ainda esteja em uso.
+
+   ========================================================= */
+
+function obterListaComparacao() {
+    return (
+        obterElementoComparacao('comparison-list') ||
+        obterElementoComparacao('comparison-container')
+    );
+}
+
+
+function obterContainerComparacao() {
+    return obterListaComparacao();
+}
+
+
+/* =========================================================
+   SEÇÃO DA COMPARAÇÃO
+   ========================================================= */
+
+function obterSecaoComparacao() {
+    return obterElementoComparacao(
+        'comparison-section'
+    );
+}
+
+
+/* =========================================================
+   BOTÃO ADICIONAR COMPARAÇÃO
+   =========================================================
+
+   Compatível com o HTML atual:
+
+   <button id="add-comparison">
+
+   ========================================================= */
+
+function obterBotaoAdicionarComparacao() {
+    if (
+        typeof document === 'undefined'
+    ) {
+        return null;
+    }
+
+    const seletores = [
+
+        '#add-comparison',
+
+        '#add-comparison-button',
+
+        '#comparison-add',
+
+        '#comparison-add-button',
+
+        '#btn-add-comparison',
+
+        '#adicionar-comparacao',
+
+        '#adicionar-comparacao-btn',
+
+        '.add-comparison',
+
+        '.add-comparison-button',
+
+        '[data-action="add-comparison"]',
+
+        '[data-comparison="add"]'
+    ];
+
+    for (
+        const seletor
+        of seletores
+    ) {
+
+        const elemento =
+            document.querySelector(
+                seletor
+            );
+
+        if (elemento) {
+            return elemento;
+        }
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   MENSAGEM DE COMPARAÇÃO (TOAST)
+   =========================================================
+
+   Reaproveita o mesmo #weather-toast usado pelo restante da
+   aplicação (já estilizado em components.css: cores verde/
+   vermelho/amarelo e a classe "show" com transição). Antes,
+   este módulo procurava um elemento próprio
+   (#comparison-message / #comparison-error) que nunca existiu
+   no HTML, então nenhuma mensagem chegava a aparecer na tela.
+
+   ========================================================= */
+
+const COMPARACAO_TOAST_DURACAO_MS =
+    5000;
+
+function obterElementoMensagemComparacao() {
+    if (
+        typeof document === 'undefined'
+    ) {
+        return null;
+    }
+
+    return (
+        document.getElementById('weather-toast') ||
+        document.querySelector('.comparison-message') ||
+        document.querySelector('.comparison-error')
+    );
+}
+
+
+/* =========================================================
+   MOSTRAR MENSAGEM
+   ========================================================= */
+
+function mostrarMensagemComparacao(
+    mensagem,
+    tipo = 'erro'
+) {
+    const elemento =
+        obterElementoMensagemComparacao();
+
+    if (!elemento) {
+        console.warn(
+            mensagem
+        );
+
+        return;
+    }
+
+    elemento.textContent =
+        mensagem;
+
+    elemento.dataset.type =
+        tipo;
+
+    elemento.classList.remove(
+        'error',
+        'warning'
+    );
+
+    if (tipo === 'erro') {
+        elemento.classList.add('error');
+    } else if (tipo === 'aviso' || tipo === 'warning') {
+        elemento.classList.add('warning');
+    }
+
+    /*
+       Reinicia o temporizador a cada nova mensagem, para que
+       uma mensagem recente não seja escondida no meio do
+       tempo de exibição de uma mensagem anterior.
+    */
+    if (elemento._timeoutComparacao) {
+        clearTimeout(
+            elemento._timeoutComparacao
+        );
+    }
+
+    elemento.classList.add(
+        'show'
+    );
+
+    elemento._timeoutComparacao =
+        setTimeout(
+            () => {
+                elemento.classList.remove(
+                    'show'
+                );
+            },
+            COMPARACAO_TOAST_DURACAO_MS
+        );
+}
+
+
+/* =========================================================
+   LIMPAR MENSAGEM
+   ========================================================= */
+
+function limparMensagemComparacao() {
+    const elemento =
+        obterElementoMensagemComparacao();
+
+    if (!elemento) {
+        return;
+    }
+
+    if (elemento._timeoutComparacao) {
+        clearTimeout(
+            elemento._timeoutComparacao
+        );
+
+        elemento._timeoutComparacao = null;
+    }
+
+    elemento.classList.remove(
+        'show',
+        'error',
+        'warning'
+    );
+
+    delete elemento.dataset.type;
+}
+
+
+/* =========================================================
+   VALIDAÇÃO
+   ========================================================= */
+
+function localizacaoValidaComparacao(
+    cidade
+) {
+    if (
+        !cidade ||
+        typeof cidade !== 'object'
+    ) {
+        return false;
+    }
+
+    if (
+        !numeroValidoWeather(
+            cidade.latitude
+        ) ||
+        !numeroValidoWeather(
+            cidade.longitude
+        )
+    ) {
+        return false;
+    }
+
+    if (
+        cidade.latitude < -90 ||
+        cidade.latitude > 90 ||
+        cidade.longitude < -180 ||
+        cidade.longitude > 180
+    ) {
+        return false;
+    }
+
+    return (
+        typeof cidade.name ===
+            'string' &&
+        cidade.name.trim() !== ''
+    );
+}
+
+
+/* =========================================================
+   CHAVE ÚNICA
+   ========================================================= */
+
+function criarChaveCidadeComparacao(
+    cidade
+) {
+    if (
+        !localizacaoValidaComparacao(
+            cidade
+        )
+    ) {
+        return '';
+    }
+
+    return [
+        Number(
+            cidade.latitude
+        ).toFixed(5),
+
+        Number(
+            cidade.longitude
+        ).toFixed(5)
+    ].join('|');
+}
+
+
+/* =========================================================
+   DUPLICIDADE
+   ========================================================= */
+
+function cidadeJaComparada(
+    cidade
+) {
+    const chave =
+        criarChaveCidadeComparacao(
+            cidade
+        );
+
+    if (!chave) {
+        return false;
+    }
+
+    return cidadesComparadas.some(
+        item =>
+            criarChaveCidadeComparacao(
+                item.cidade
+            ) === chave
+    );
+}
+
+
+/* =========================================================
+   NORMALIZAÇÃO
+   ========================================================= */
+
+function criarItemComparacao(
+    cidade,
+    clima
+) {
+    if (
+        !localizacaoValidaComparacao(
+            cidade
+        ) ||
+        !clima ||
+        typeof clima !== 'object'
+    ) {
+        return null;
+    }
+
+    const codigo =
+        clima.weathercode;
+
+    return {
+
+        cidade: {
+            ...cidade
+        },
+
+        clima: {
+
+            temperatura:
+                clima.temperature,
+
+            sensacao:
+                clima.apparent_temperature,
+
+            umidade:
+                clima.relative_humidity_2m,
+
+            vento:
+                clima.windspeed,
+
+            direcaoVento:
+                clima.winddirection,
+
+            codigo,
+
+            isDay:
+                clima.is_day,
+
+            horario:
+                clima.time,
+
+            descricao:
+                obterDescricaoClimaWeather(
+                    codigo
+                ),
+
+            icone:
+                obterIconeClimaWeather(
+                    codigo,
+                    clima.is_day
+                )
+        }
+    };
+}
+
+
+/* =========================================================
+   BUSCAR CLIMA DE UMA CIDADE
+   ========================================================= */
+
+async function buscarClimaCidadeComparacao(
+    cidade
+) {
+    if (
+        !localizacaoValidaComparacao(
+            cidade
+        )
+    ) {
+        throw new Error(
+            'Localização inválida para comparação.'
+        );
+    }
+
+    const clima =
+        await buscarClimaAtual(
+            cidade.latitude,
+            cidade.longitude
+        );
+
+    return criarItemComparacao(
+        cidade,
+        clima
+    );
+}
+
+
+/* =========================================================
+   BUSCA CONTROLADA
+   ========================================================= */
+
+async function buscarClimasComparacao(
+    cidades,
+    idComparacao
+) {
+    const resultados = [];
+
+    for (
+        let inicio = 0;
+        inicio < cidades.length;
+        inicio +=
+            COMPARACAO_MAXIMO_REQUISICOES
+    ) {
+
+        if (
+            idComparacao !==
+            idComparacaoAtual
+        ) {
+            return [];
+        }
+
+        const grupo =
+            cidades.slice(
+                inicio,
+                inicio +
+                    COMPARACAO_MAXIMO_REQUISICOES
+            );
+
+        const respostas =
+            await Promise.allSettled(
+                grupo.map(
+                    cidade =>
+                        buscarClimaCidadeComparacao(
+                            cidade
+                        )
+                )
+            );
+
+        if (
+            idComparacao !==
+            idComparacaoAtual
+        ) {
+            return [];
+        }
+
+        respostas.forEach(
+            resposta => {
+
+                if (
+                    resposta.status ===
+                        'fulfilled' &&
+                    resposta.value
+                ) {
+                    resultados.push(
+                        resposta.value
+                    );
+                }
+            }
+        );
+    }
+
+    return resultados;
+}
+
+
+/* =========================================================
    ADICIONAR CIDADE
    ========================================================= */
 
-function adicionarCidadeComparacao(
-    cidadeEncontrada,
-    climaAtual
+async function adicionarCidadeComparacao(
+    cidade
 ) {
+    if (
+        !localizacaoValidaComparacao(
+            cidade
+        )
+    ) {
+        return {
+            sucesso: false,
+
+            mensagem:
+                'A cidade selecionada é inválida.'
+        };
+    }
 
     if (
         cidadesComparadas.length >=
-        LIMITE_COMPARACAO
+        COMPARACAO_MAXIMO_CIDADES
     ) {
+        return {
+            sucesso: false,
 
-        mostrarNotificacao(
-            'Você pode comparar no máximo 5 cidades.',
-            'aviso'
-        );
-
-
-        atualizarEstadoBotao();
-
-
-        return false;
+            mensagem:
+                'Limite de 5 cidades atingido.'
+        };
     }
-
-
-    const cidade =
-        criarDadosComparacao(
-            cidadeEncontrada,
-            climaAtual
-        );
-
 
     if (
-        !cidade
+        cidadeJaComparada(
+            cidade
+        )
     ) {
+        return {
+            sucesso: false,
 
-        mostrarNotificacao(
-            'Os dados desta cidade não são válidos para comparação.',
-            'erro'
-        );
-
-
-        return false;
+            mensagem:
+                'Essa cidade já foi escolhida.'
+        };
     }
 
+    const id =
+        ++idComparacaoAtual;
 
-    const cidadeJaExiste =
-        cidadesComparadas.some(
-            item =>
-                item.id ===
-                cidade.id
+    try {
+
+        const item =
+            await buscarClimaCidadeComparacao(
+                cidade
+            );
+
+        if (
+            id !==
+            idComparacaoAtual
+        ) {
+            return {
+                sucesso: false,
+
+                mensagem:
+                    'A comparação foi atualizada.'
+            };
+        }
+
+        if (!item) {
+            return {
+                sucesso: false,
+
+                mensagem:
+                    'Não foi possível preparar os dados dessa cidade.'
+            };
+        }
+
+        cidadesComparadas.push(
+            item
         );
 
+        salvarComparacoes();
 
+        renderizarComparacao();
+
+        return {
+            sucesso: true,
+
+            item
+        };
+
+    } catch (erro) {
+
+        if (
+            id !==
+            idComparacaoAtual
+        ) {
+            return {
+                sucesso: false,
+
+                mensagem:
+                    'A comparação foi atualizada.'
+            };
+        }
+
+        console.error(
+            'Erro ao adicionar cidade à comparação.',
+            erro
+        );
+
+        return {
+            sucesso: false,
+
+            mensagem:
+                erro instanceof Error
+                    ? erro.message
+                    : 'Não foi possível obter o clima dessa cidade.'
+        };
+    }
+}
+
+
+/* =========================================================
+   COMPARAR VÁRIAS CIDADES
+   ========================================================= */
+
+async function compararCidades(
+    cidades
+) {
     if (
-        cidadeJaExiste
+        !Array.isArray(cidades)
     ) {
-
-        mostrarNotificacao(
-            `${cidade.nome} já está na comparação.`,
-            'aviso'
-        );
-
-
-        return false;
+        return [];
     }
 
+    const cidadesValidas =
+        cidades.filter(
+            localizacaoValidaComparacao
+        );
 
-    cidadesComparadas.push(
-        cidade
+    const cidadesUnicas = [];
+
+    const chaves =
+        new Set();
+
+    cidadesValidas.forEach(
+        cidade => {
+
+            if (
+                cidadesUnicas.length >=
+                COMPARACAO_MAXIMO_CIDADES
+            ) {
+                return;
+            }
+
+            const chave =
+                criarChaveCidadeComparacao(
+                    cidade
+                );
+
+            if (
+                chave &&
+                !chaves.has(chave)
+            ) {
+                chaves.add(
+                    chave
+                );
+
+                cidadesUnicas.push(
+                    cidade
+                );
+            }
+        }
     );
 
+    const id =
+        ++idComparacaoAtual;
+
+    const resultados =
+        await buscarClimasComparacao(
+            cidadesUnicas,
+            id
+        );
+
+    if (
+        id !==
+        idComparacaoAtual
+    ) {
+        return [];
+    }
+
+    cidadesComparadas =
+        resultados.slice(
+            0,
+            COMPARACAO_MAXIMO_CIDADES
+        );
+
+    renderizarComparacao();
+
+    return cidadesComparadas.slice();
+}
+
+
+/* =========================================================
+   REMOVER
+   ========================================================= */
+
+function removerCidadeComparacao(
+    indice
+) {
+    if (
+        !Number.isInteger(indice) ||
+        indice < 0 ||
+        indice >=
+            cidadesComparadas.length
+    ) {
+        return false;
+    }
+
+    ++idComparacaoAtual;
+
+    cidadesComparadas.splice(
+        indice,
+        1
+    );
 
     salvarComparacoes();
 
-
-    renderizarComparacoes();
-
-
-    atualizarEstadoBotao();
-
-
-    mostrarNotificacao(
-        `${cidade.nome} adicionada com sucesso!`
-    );
-
+    renderizarComparacao();
 
     return true;
 }
 
 
 /* =========================================================
-   REMOVER CIDADE
+   LIMPAR
    ========================================================= */
 
-function removerCidadeComparacao(
-    id
-) {
+function limparComparacao() {
+    ++idComparacaoAtual;
 
-    if (
-        typeof id !== 'string'
-    ) {
-
-        return;
-    }
-
-
-    const cidadeRemovida =
-        cidadesComparadas.find(
-            cidade =>
-                cidade.id ===
-                id
-        );
-
-
-    const novaLista =
-        cidadesComparadas.filter(
-            cidade =>
-                cidade.id !==
-                id
-        );
-
-
-    if (
-        novaLista.length ===
-        cidadesComparadas.length
-    ) {
-
-        return;
-    }
-
-
-    cidadesComparadas =
-        novaLista;
-
+    cidadesComparadas = [];
 
     salvarComparacoes();
 
-
-    renderizarComparacoes();
-
-
-    atualizarEstadoBotao();
-
-
-    if (
-        cidadeRemovida
-    ) {
-
-        mostrarNotificacao(
-            `${cidadeRemovida.nome} removida da comparação.`
-        );
-    }
+    renderizarComparacao();
 }
 
 
 /* =========================================================
-   CRIAR ELEMENTO
+   DADO DO CARD
    ========================================================= */
 
-function criarElementoComparacao(
-    elemento,
-    classe,
-    texto
-) {
-
-    const novoElemento =
-        document.createElement(
-            elemento
-        );
-
-
-    if (
-        classe
-    ) {
-
-        novoElemento.classList.add(
-            classe
-        );
-    }
-
-
-    novoElemento.textContent =
-        String(
-            texto ?? ''
-        );
-
-
-    return novoElemento;
-}
-
-
-/* =========================================================
-   CRIAR DETALHE
-   ========================================================= */
-
-function criarDetalheComparacao(
+function adicionarDadoComparacao(
+    lista,
     nome,
     valor
 ) {
-
-    const detalhe =
+    const titulo =
         document.createElement(
-            'div'
+            'dt'
         );
 
+    titulo.textContent =
+        nome;
 
-    detalhe.classList.add(
-        'comparison-detail'
-    );
-
-
-    const nomeElemento =
-        criarElementoComparacao(
-            'span',
-            '',
-            nome
+    const conteudo =
+        document.createElement(
+            'dd'
         );
 
+    conteudo.textContent =
+        valor;
 
-    const valorElemento =
-        criarElementoComparacao(
-            'strong',
-            '',
-            valor
-        );
-
-
-    detalhe.appendChild(
-        nomeElemento
+    lista.appendChild(
+        titulo
     );
 
-
-    detalhe.appendChild(
-        valorElemento
+    lista.appendChild(
+        conteudo
     );
-
-
-    return detalhe;
 }
 
 
 /* =========================================================
-   CRIAR CARD
+   NOME DA CIDADE
+   ========================================================= */
+
+function criarNomeCidadeComparacao(
+    cidade
+) {
+    const nome =
+        typeof cidade.name === 'string'
+            ? cidade.name
+            : 'Cidade';
+
+    const regiao =
+        typeof cidade.admin1 === 'string'
+            ? cidade.admin1
+            : '';
+
+    const pais =
+        typeof cidade.country === 'string'
+            ? cidade.country
+            : '';
+
+    return [
+        nome,
+        regiao,
+        pais
+    ]
+        .filter(Boolean)
+        .join(', ');
+}
+
+
+/* =========================================================
+   CARD
    ========================================================= */
 
 function criarCardComparacao(
-    cidade
+    item,
+    indice
 ) {
+    const cidade =
+        item.cidade;
+
+    const clima =
+        item.clima;
 
     const card =
         document.createElement(
             'article'
         );
 
+    card.className =
+        'comparison-card';
 
-    card.classList.add(
-        'comparison-card'
-    );
+    card.dataset.index =
+        String(indice);
 
+    const cabecalho =
+        document.createElement(
+            'header'
+        );
 
-    card.setAttribute(
-        'aria-label',
-        `Comparação climática de ${cidade.nome}`
-    );
+    const titulo =
+        document.createElement(
+            'h3'
+        );
 
+    titulo.textContent =
+        criarNomeCidadeComparacao(
+            cidade
+        );
 
-    /* =====================================================
-       BOTÃO REMOVER
-       ===================================================== */
-
-    const removeButton =
+    const remover =
         document.createElement(
             'button'
         );
 
-
-    removeButton.type =
+    remover.type =
         'button';
 
+    remover.className =
+        'comparison-remove';
 
-    removeButton.classList.add(
-        'remove-comparison'
-    );
-
-
-    removeButton.setAttribute(
-        'aria-label',
-        `Remover ${cidade.nome} da comparação`
-    );
-
-
-    removeButton.title =
-        'Remover cidade';
-
-
-    removeButton.textContent =
+    remover.textContent =
         '×';
 
+    remover.setAttribute(
+        'aria-label',
+        `Remover ${cidade.name || 'cidade'} da comparação`
+    );
 
-    removeButton.dataset.id =
-        cidade.id;
+    remover.addEventListener(
+        'click',
+        () => {
+            removerCidadeComparacao(
+                indice
+            );
+        }
+    );
 
+    cabecalho.appendChild(
+        titulo
+    );
 
-    /* =====================================================
-       CIDADE
-       ===================================================== */
+    cabecalho.appendChild(
+        remover
+    );
 
-    const cityElement =
+    const climaAtual =
         document.createElement(
             'div'
         );
 
+    climaAtual.className =
+        'comparison-current';
 
-    cityElement.classList.add(
-        'comparison-city'
-    );
-
-
-    cityElement.textContent =
-        cidade.nome;
-
-
-    if (
-        cidade.pais
-    ) {
-
-        const countryElement =
-            document.createElement(
-                'small'
-            );
-
-
-        countryElement.textContent =
-            cidade.pais;
-
-
-        cityElement.appendChild(
-            countryElement
-        );
-    }
-
-
-    /* =====================================================
-       DESCRIÇÃO
-       ===================================================== */
-
-    let descricao =
-        'Condição desconhecida';
-
-
-    if (
-        typeof window.obterDescricaoClima ===
-        'function'
-    ) {
-
-        descricao =
-            window.obterDescricaoClima(
-                cidade.weathercode
-            );
-    }
-
-
-    /* =====================================================
-       ÍCONE
-       ===================================================== */
-
-    let icone =
-        '🌤️';
-
-
-    if (
-        typeof window.obterIconeClima ===
-        'function'
-    ) {
-
-        icone =
-            window.obterIconeClima(
-
-                cidade.weathercode,
-
-                cidade.is_day ? 1 : 0
-
-            );
-    }
-
-
-    const iconElement =
-        criarElementoComparacao(
-            'div',
-            'comparison-icon',
-            icone
+    const icone =
+        document.createElement(
+            'span'
         );
 
+    icone.className =
+        'comparison-icon';
 
-    iconElement.setAttribute(
-        'aria-hidden',
-        'true'
+    icone.textContent =
+        clima.icone;
+
+    icone.setAttribute(
+        'role',
+        'img'
     );
 
-
-    /* =====================================================
-       TEMPERATURA
-       ===================================================== */
+    icone.setAttribute(
+        'aria-label',
+        clima.descricao
+    );
 
     const temperatura =
-        criarElementoComparacao(
-
-            'div',
-
-            'comparison-temperature',
-
-            `${Math.round(
-                cidade.temperatura
-            )}°C`
-
-        );
-
-
-    /* =====================================================
-       DESCRIÇÃO
-       ===================================================== */
-
-    const descricaoElement =
-        criarElementoComparacao(
-
-            'div',
-
-            'comparison-description',
-
-            descricao
-
-        );
-
-
-    /* =====================================================
-       DETALHES
-       ===================================================== */
-
-    const details =
         document.createElement(
-            'div'
+            'strong'
         );
 
+    temperatura.className =
+        'comparison-temperature';
 
-    details.classList.add(
-        'comparison-details'
-    );
-
-
-    const sensacao =
-        numeroValido(
-            cidade.sensacao
+    temperatura.textContent =
+        numeroValidoWeather(
+            clima.temperatura
         )
-            ? `${Math.round(
-                cidade.sensacao
-            )}°C`
-            : '--';
+            ? `${clima.temperatura} °C`
+            : '-- °C';
 
-
-    const umidade =
-        numeroValido(
-            cidade.umidade
-        )
-            ? `${Math.round(
-                cidade.umidade
-            )}%`
-            : '--';
-
-
-    const vento =
-        numeroValido(
-            cidade.vento
-        )
-            ? `${Math.round(
-                cidade.vento
-            )} km/h`
-            : '--';
-
-
-    details.appendChild(
-        criarDetalheComparacao(
-            'Sensação',
-            sensacao
-        )
+    climaAtual.appendChild(
+        icone
     );
 
-
-    details.appendChild(
-        criarDetalheComparacao(
-            'Umidade',
-            umidade
-        )
-    );
-
-
-    details.appendChild(
-        criarDetalheComparacao(
-            'Vento',
-            vento
-        )
-    );
-
-
-    /* =====================================================
-       MONTAGEM
-       ===================================================== */
-
-    card.appendChild(
-        removeButton
-    );
-
-
-    card.appendChild(
-        cityElement
-    );
-
-
-    card.appendChild(
-        iconElement
-    );
-
-
-    card.appendChild(
+    climaAtual.appendChild(
         temperatura
     );
 
+    const descricao =
+        document.createElement(
+            'p'
+        );
 
-    card.appendChild(
-        descricaoElement
+    descricao.className =
+        'comparison-description';
+
+    descricao.textContent =
+        clima.descricao;
+
+    const dados =
+        document.createElement(
+            'dl'
+        );
+
+    dados.className =
+        'comparison-details';
+
+    adicionarDadoComparacao(
+        dados,
+        'Sensação',
+        numeroValidoWeather(
+            clima.sensacao
+        )
+            ? `${clima.sensacao} °C`
+            : '--'
     );
 
-
-    card.appendChild(
-        details
+    adicionarDadoComparacao(
+        dados,
+        'Umidade',
+        numeroValidoWeather(
+            clima.umidade
+        )
+            ? `${clima.umidade}%`
+            : '--'
     );
 
+    adicionarDadoComparacao(
+        dados,
+        'Vento',
+        numeroValidoWeather(
+            clima.vento
+        )
+            ? `${clima.vento} km/h`
+            : '--'
+    );
+
+    /*
+       Regra: mostrar apenas a velocidade do vento.
+       wind_direction_10m não é exibido — não agrega
+       valor para o usuário comum e o dado continua
+       disponível em clima.direcaoVento se precisar
+       futuramente.
+    */
+
+    card.appendChild(
+        cabecalho
+    );
+
+    card.appendChild(
+        climaAtual
+    );
+
+    card.appendChild(
+        descricao
+    );
+
+    card.appendChild(
+        dados
+    );
 
     return card;
 }
 
 
 /* =========================================================
-   RENDERIZAR COMPARAÇÕES
+   RENDERIZAÇÃO
    ========================================================= */
 
-function renderizarComparacoes() {
+function renderizarComparacao() {
+    const secao =
+        obterSecaoComparacao();
+
+    const container =
+        obterContainerComparacao();
+
+    const lista =
+        obterListaComparacao();
 
     if (
-        !comparisonContainer ||
-        !comparisonSection
+        !secao ||
+        !container ||
+        !lista
     ) {
+        console.warn(
+            'A estrutura HTML da comparação não foi encontrada.'
+        );
 
-        return;
+        return false;
     }
 
-
-    comparisonContainer.replaceChildren();
-
+    lista.innerHTML =
+        '';
 
     if (
-        cidadesComparadas.length === 0
+        cidadesComparadas.length ===
+        0
     ) {
-
-        comparisonSection.classList.add(
+        secao.classList.add(
             'hidden'
         );
 
-
-        return;
+        return true;
     }
 
-
-    comparisonSection.classList.remove(
-        'hidden'
-    );
-
-
-    const fragment =
-        document.createDocumentFragment();
-
-
     cidadesComparadas.forEach(
-        cidade => {
+        (
+            item,
+            indice
+        ) => {
 
             const card =
                 criarCardComparacao(
-                    cidade
+                    item,
+                    indice
                 );
 
-
-            fragment.appendChild(
+            lista.appendChild(
                 card
             );
-
         }
     );
 
-
-    comparisonContainer.appendChild(
-        fragment
+    secao.classList.remove(
+        'hidden'
     );
+
+    return true;
 }
 
 
 /* =========================================================
-   EVENTO DE REMOÇÃO
+   OBTER CIDADE ATUAL DA API
    ========================================================= */
 
-function configurarRemocaoComparacao() {
-
+function obterCidadeAtualParaComparacao() {
     if (
-        !comparisonContainer
+        typeof window === 'undefined'
     ) {
-
-        return;
+        return null;
     }
 
+    /*
+       A API principal mantém a cidade
+       pesquisada em window.cidadeAtualPesquisada.
+    */
 
-    comparisonContainer.addEventListener(
-        'click',
-        evento => {
+    if (
+        window.cidadeAtualPesquisada &&
+        localizacaoValidaComparacao(
+            window.cidadeAtualPesquisada
+        )
+    ) {
+        return {
+            ...window.cidadeAtualPesquisada
+        };
+    }
 
-            const botao =
-                evento.target.closest(
-                    '.remove-comparison'
-                );
+    /*
+       Compatibilidade adicional caso algum
+       componente utilize ClimaAPI.
+    */
 
+    if (
+        window.ClimaAPI &&
+        typeof window.ClimaAPI
+            .obterCidadeAtual ===
+            'function'
+    ) {
 
-            if (
-                !botao ||
-                !comparisonContainer.contains(
-                    botao
-                )
-            ) {
+        const cidade =
+            window.ClimaAPI
+                .obterCidadeAtual();
 
-                return;
-            }
-
-
-            const id =
-                botao.dataset.id;
-
-
-            removerCidadeComparacao(
-                id
-            );
+        if (
+            localizacaoValidaComparacao(
+                cidade
+            )
+        ) {
+            return {
+                ...cidade
+            };
         }
-    );
+    }
+
+    return null;
 }
 
 
 /* =========================================================
-   ESTADO DO BOTÃO
+   ATUALIZAR ESTADO DO BOTÃO
    ========================================================= */
 
-function atualizarEstadoBotao() {
+function atualizarBotaoAdicionarComparacao() {
+    const botao =
+        obterBotaoAdicionarComparacao();
 
-    if (
-        !addComparisonButton
-    ) {
-
+    if (!botao) {
         return;
     }
 
+    const cidade =
+        obterCidadeAtualParaComparacao();
 
-    const limiteAtingido =
-        cidadesComparadas.length >=
-        LIMITE_COMPARACAO;
-
-
-    addComparisonButton.disabled =
-        limiteAtingido;
-
-
-    if (
-        limiteAtingido
-    ) {
-
-        addComparisonButton.setAttribute(
-            'aria-label',
-            'Limite de cinco cidades atingido'
+    const podeAdicionar =
+        cidade &&
+        cidadesComparadas.length <
+            COMPARACAO_MAXIMO_CIDADES &&
+        !cidadeJaComparada(
+            cidade
         );
 
-        addComparisonButton.title =
-            'Limite de 5 cidades atingido';
+    botao.disabled =
+        !podeAdicionar;
+
+    if (
+        cidadesComparadas.length >=
+        COMPARACAO_MAXIMO_CIDADES
+    ) {
+
+        botao.title =
+            'Limite de 5 cidades atingido.';
+
+    } else if (
+        cidade &&
+        cidadeJaComparada(
+            cidade
+        )
+    ) {
+
+        botao.title =
+            'Esta cidade já foi escolhida.';
+
+    } else if (!cidade) {
+
+        botao.title =
+            'Pesquise uma cidade antes de adicionar à comparação.';
 
     } else {
 
-        addComparisonButton.removeAttribute(
-            'aria-label'
-        );
-
-        addComparisonButton.removeAttribute(
-            'title'
-        );
+        botao.title =
+            'Adicionar a cidade atual à comparação.';
     }
 }
 
 
 /* =========================================================
-   BOTÃO DE ADICIONAR
+   EVENTO DO BOTÃO
    ========================================================= */
 
-function configurarBotaoComparacao() {
+async function tratarCliqueAdicionarComparacao(
+    evento
+) {
+    if (evento) {
+        evento.preventDefault();
+    }
 
-    if (
-        !addComparisonButton
-    ) {
+    limparMensagemComparacao();
+
+    const botao =
+        obterBotaoAdicionarComparacao();
+
+    const cidade =
+        obterCidadeAtualParaComparacao();
+
+    if (!cidade) {
+
+        mostrarMensagemComparacao(
+            'Pesquise uma cidade antes de adicioná-la à comparação.'
+        );
 
         return;
     }
 
+    if (
+        cidadeJaComparada(
+            cidade
+        )
+    ) {
 
-    addComparisonButton.addEventListener(
-        'click',
-        () => {
+        mostrarMensagemComparacao(
+            'Essa cidade já foi escolhida.'
+        );
 
-            if (
-                cidadesComparadas.length >=
-                LIMITE_COMPARACAO
-            ) {
+        atualizarBotaoAdicionarComparacao();
 
-                mostrarNotificacao(
-                    'Você pode comparar no máximo 5 cidades.',
-                    'aviso'
-                );
+        return;
+    }
 
+    if (
+        cidadesComparadas.length >=
+        COMPARACAO_MAXIMO_CIDADES
+    ) {
 
-                return;
-            }
+        mostrarMensagemComparacao(
+            'Limite de 5 cidades atingido.'
+        );
 
+        atualizarBotaoAdicionarComparacao();
 
-            const cidadeAtual =
-                window.cidadeAtualPesquisada;
+        return;
+    }
 
+    if (botao) {
+        botao.disabled = true;
 
-            const climaAtual =
-                window.climaAtualPesquisado;
+        botao.dataset.loading =
+            'true';
+    }
 
+    try {
 
-            if (
-                !cidadeAtual ||
-                !climaAtual
-            ) {
-
-                mostrarNotificacao(
-                    'Pesquise uma cidade antes de adicioná-la à comparação.',
-                    'aviso'
-                );
-
-
-                return;
-            }
-
-
-            adicionarCidadeComparacao(
-
-                cidadeAtual,
-
-                climaAtual
-
+        const resultado =
+            await adicionarCidadeComparacao(
+                cidade
             );
+
+        if (
+            !resultado ||
+            resultado.sucesso !== true
+        ) {
+
+            mostrarMensagemComparacao(
+                resultado &&
+                resultado.mensagem
+                    ? resultado.mensagem
+                    : 'Não foi possível adicionar a cidade à comparação.'
+            );
+
+            return;
         }
-    );
+
+        mostrarMensagemComparacao(
+            'Cidade selecionada com sucesso.',
+            'sucesso'
+        );
+
+    } catch (erro) {
+
+        console.error(
+            'Erro ao adicionar cidade à comparação:',
+            erro
+        );
+
+        mostrarMensagemComparacao(
+            erro instanceof Error
+                ? erro.message
+                : 'Não foi possível adicionar a cidade à comparação.'
+        );
+
+    } finally {
+
+        if (botao) {
+            delete botao.dataset.loading;
+        }
+
+        atualizarBotaoAdicionarComparacao();
+    }
 }
 
 
 /* =========================================================
-   INICIALIZAÇÃO
+   INICIALIZAÇÃO DA COMPARAÇÃO
    ========================================================= */
 
 function inicializarComparacao() {
+    if (
+        typeof document === 'undefined'
+    ) {
+        return false;
+    }
 
-    cidadesComparadas =
-        carregarComparacoes();
+    const botao =
+        obterBotaoAdicionarComparacao();
 
+    if (!botao) {
 
-    renderizarComparacoes();
+        console.warn(
+            'Botão "Adicionar comparação" não foi encontrado.'
+        );
 
+        return false;
+    }
 
-    atualizarEstadoBotao();
+    /*
+       Evita registrar o evento duas vezes.
+    */
 
+    if (
+        botao.dataset.comparisonInitialized ===
+        'true'
+    ) {
+        atualizarBotaoAdicionarComparacao();
 
-    configurarRemocaoComparacao();
+        return true;
+    }
 
+    botao.dataset.comparisonInitialized =
+        'true';
 
-    configurarBotaoComparacao();
+    botao.addEventListener(
+        'click',
+        tratarCliqueAdicionarComparacao
+    );
 
+    atualizarBotaoAdicionarComparacao();
+
+    /*
+       Se havia cidades salvas de uma sessão anterior
+       (localStorage), exibe-as imediatamente, sem esperar
+       uma nova pesquisa.
+    */
+    if (cidadesComparadas.length > 0) {
+        renderizarComparacao();
+    }
 
     console.log(
-        'comparison.js carregado com sucesso.'
+        'Botão de comparação inicializado com sucesso.'
+    );
+
+    return true;
+}
+
+
+/* =========================================================
+   OBSERVAR MUDANÇA DA CIDADE ATUAL
+   ========================================================= */
+
+let intervaloComparacao =
+    null;
+
+
+function iniciarMonitoramentoComparacao() {
+    if (
+        typeof window === 'undefined'
+    ) {
+        return;
+    }
+
+    if (
+        intervaloComparacao !== null
+    ) {
+        return;
+    }
+
+    intervaloComparacao =
+        window.setInterval(
+            () => {
+
+                atualizarBotaoAdicionarComparacao();
+
+            },
+            500
+        );
+}
+
+
+function pararMonitoramentoComparacao() {
+    if (
+        typeof window === 'undefined'
+    ) {
+        return;
+    }
+
+    if (
+        intervaloComparacao === null
+    ) {
+        return;
+    }
+
+    window.clearInterval(
+        intervaloComparacao
+    );
+
+    intervaloComparacao =
+        null;
+}
+
+
+/* =========================================================
+   ESTADO PÚBLICO
+   ========================================================= */
+
+function obterCidadesComparadas() {
+    return cidadesComparadas.map(
+        item => ({
+
+            cidade: {
+                ...item.cidade
+            },
+
+            clima: {
+                ...item.clima
+            }
+        })
     );
 }
 
 
-inicializarComparacao();
+function quantidadeCidadesComparadas() {
+    return cidadesComparadas.length;
+}
+
+
+function obterMaximoCidadesComparacao() {
+    return COMPARACAO_MAXIMO_CIDADES;
+}
+
+
+function obterIdComparacaoAtual() {
+    return idComparacaoAtual;
+}
 
 
 /* =========================================================
-   FUNÇÕES DISPONÍVEIS GLOBALMENTE
+   API PÚBLICA
    ========================================================= */
 
-window.adicionarCidadeComparacao =
-    adicionarCidadeComparacao;
+const ComparisonAPI = {
+
+    localizacaoValidaComparacao,
+
+    criarChaveCidadeComparacao,
+
+    cidadeJaComparada,
+
+    criarItemComparacao,
+
+    buscarClimaCidadeComparacao,
+
+    buscarClimasComparacao,
+
+    adicionarCidadeComparacao,
+
+    compararCidades,
+
+    removerCidadeComparacao,
+
+    limparComparacao,
+
+    renderizarComparacao,
+
+    obterCidadesComparadas,
+
+    quantidadeCidadesComparadas,
+
+    obterMaximoCidadesComparacao,
+
+    obterIdComparacaoAtual,
+
+    obterCidadeAtualParaComparacao,
+
+    atualizarBotaoAdicionarComparacao,
+
+    tratarCliqueAdicionarComparacao,
+
+    inicializarComparacao,
+
+    iniciarMonitoramentoComparacao,
+
+    pararMonitoramentoComparacao
+};
 
 
-window.removerCidadeComparacao =
-    removerCidadeComparacao;
+/* =========================================================
+   API GLOBAL DO NAVEGADOR
+   ========================================================= */
+
+if (
+    typeof window !== 'undefined'
+) {
+
+    window.ComparisonAPI =
+        ComparisonAPI;
+}
 
 
-window.renderizarComparacoes =
-    renderizarComparacoes;
+/* =========================================================
+   INICIALIZAÇÃO NO NAVEGADOR
+   ========================================================= */
+
+if (
+    typeof document !== 'undefined'
+) {
+
+    if (
+        document.readyState ===
+        'loading'
+    ) {
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            () => {
+
+                inicializarComparacao();
+
+                iniciarMonitoramentoComparacao();
+
+            },
+            {
+                once: true
+            }
+        );
+
+    } else {
+
+        inicializarComparacao();
+
+        iniciarMonitoramentoComparacao();
+    }
+}
+
+
+/* =========================================================
+   EXPORTAÇÕES ES MODULE
+   ========================================================= */
+
+export {
+
+    localizacaoValidaComparacao,
+
+    criarChaveCidadeComparacao,
+
+    cidadeJaComparada,
+
+    criarItemComparacao,
+
+    buscarClimaCidadeComparacao,
+
+    buscarClimasComparacao,
+
+    adicionarCidadeComparacao,
+
+    compararCidades,
+
+    removerCidadeComparacao,
+
+    limparComparacao,
+
+    renderizarComparacao,
+
+    obterCidadesComparadas,
+
+    quantidadeCidadesComparadas,
+
+    obterMaximoCidadesComparacao,
+
+    obterIdComparacaoAtual,
+
+    obterCidadeAtualParaComparacao,
+
+    atualizarBotaoAdicionarComparacao,
+
+    tratarCliqueAdicionarComparacao,
+
+    inicializarComparacao,
+
+    iniciarMonitoramentoComparacao,
+
+    pararMonitoramentoComparacao,
+
+    ComparisonAPI
+};
+
+
+/* =========================================================
+   CONFIRMAÇÃO
+   ========================================================= */
+
+console.log(
+    'comparison.js carregado com sucesso.'
+);

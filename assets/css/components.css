@@ -553,6 +553,76 @@ button:disabled {
 
 
 /* ---------------------------------------------------------
+   OPÇÕES DE LOCALIZAÇÃO (cidades homônimas)
+   ---------------------------------------------------------
+
+   api.js cria/usa o container #location-options quando a
+   geocodificação retorna mais de uma cidade compatível
+   (ex.: "São Paulo" no Brasil x outros países).
+   --------------------------------------------------------- */
+
+.location-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    margin: 0.75rem 0 1.25rem;
+    padding: 1rem;
+
+    background: var(--surface, rgba(255, 255, 255, 0.9));
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+    border-radius: var(--radius-lg, 14px);
+}
+
+.location-options-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary, #4b5563);
+}
+
+.location-option-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+
+    background: var(--surface-alt, rgba(0, 0, 0, 0.03));
+    border: 1px solid transparent;
+    border-radius: var(--radius-md, 10px);
+
+    cursor: pointer;
+    text-align: left;
+
+    transition:
+        background var(--transition-fast, 0.15s),
+        border-color var(--transition-fast, 0.15s),
+        transform var(--transition-fast, 0.15s);
+}
+
+.location-option-card strong {
+    font-size: 0.98rem;
+    color: var(--text-primary, #111827);
+}
+
+.location-option-card span {
+    font-size: 0.82rem;
+    color: var(--text-secondary, #6b7280);
+}
+
+.location-option-card:hover,
+.location-option-card:focus-visible {
+    background: var(--accent-soft, rgba(59, 130, 246, 0.1));
+    border-color: var(--accent, #3b82f6);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+
+/* ---------------------------------------------------------
    ELEMENTOS OCULTOS
    --------------------------------------------------------- */
 
@@ -591,4 +661,105 @@ button:disabled {
 
     background:
         rgba(80, 110, 140, 0.65);
+}
+
+
+/* ---------------------------------------------------------
+   AVISO DE PRIVACIDADE E LICENCIAMENTO
+   ---------------------------------------------------------
+
+   Exigido pela auditoria de Segurança/Privacidade e pela
+   auditoria de Licenciamento/Conformidade (Tarefa 06).
+   --------------------------------------------------------- */
+
+.privacy-notice {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    margin: 0 0 1.25rem;
+    padding: 0.9rem 2.4rem 0.9rem 1rem;
+
+    background: var(--surface-alt, rgba(59, 130, 246, 0.08));
+    border: 1px solid var(--border, rgba(59, 130, 246, 0.25));
+    border-radius: var(--radius-md, 10px);
+
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #374151);
+}
+
+.privacy-notice p {
+    margin: 0;
+}
+
+.privacy-notice a {
+    color: var(--accent, #2563eb);
+    text-decoration: underline;
+}
+
+.privacy-notice code {
+    padding: 0.05rem 0.3rem;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    font-size: 0.82em;
+}
+
+.privacy-notice-dismiss {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+
+    width: 1.6rem;
+    height: 1.6rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+
+    font-size: 0.9rem;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+
+    transition: background var(--transition-fast, 0.15s);
+}
+
+.privacy-notice-dismiss:hover,
+.privacy-notice-dismiss:focus-visible {
+    background: rgba(0, 0, 0, 0.08);
+    outline: none;
+}
+
+body.dark-mode .privacy-notice {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary, #cbd5e1);
+}
+
+
+/* ---------------------------------------------------------
+   RODAPÉ
+   --------------------------------------------------------- */
+
+.app-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+
+    border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+
+    font-size: 0.78rem;
+    text-align: center;
+    color: var(--text-secondary, #6b7280);
+}
+
+.app-footer a {
+    color: inherit;
+    text-decoration: underline;
 }

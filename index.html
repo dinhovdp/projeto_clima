@@ -20,65 +20,96 @@
         content="light dark"
     >
 
+    <!--
+        Política de Segurança de Conteúdo (CSP)
+
+        Reforço de segurança definido na auditoria da Tarefa 06:
+
+        - script-src 'self'   -> nenhum script externo/CDN é
+          carregado; todo o JS é local (ES Modules próprios).
+        - connect-src         -> só permite chamadas fetch/XHR
+          para os domínios oficiais da Open-Meteo.
+        - object-src 'none'   -> bloqueia plugins (Flash, Java etc).
+        - base-uri 'self'     -> evita injeção de <base> maliciosa.
+
+        NOTA: "frame-ancestors" (proteção contra clickjacking)
+        não é aplicado aqui de propósito — o navegador ignora
+        essa diretiva quando definida via <meta> e emite um
+        aviso no console. Ela só tem efeito real quando enviada
+        como cabeçalho HTTP pelo servidor. Ao publicar em
+        produção (GitHub Pages, Netlify, servidor próprio etc.),
+        configure "Content-Security-Policy: frame-ancestors
+        'none'" (ou equivalente) nos cabeçalhos de resposta do
+        servidor para obter essa proteção de verdade.
+    -->
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="
+            default-src 'self';
+            script-src 'self';
+            style-src 'self';
+            img-src 'self' data:;
+            connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com;
+            object-src 'none';
+            base-uri 'self';
+        "
+    >
+
+    <!--
+        Favicon inline (SVG em data URI) só para evitar o
+        pedido automático de /favicon.ico que o navegador faz
+        e que retornava 404 no console. Sem arquivo externo.
+    -->
+    <link
+        rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9B%85%3C/text%3E%3C/svg%3E"
+    >
+
     <title>Consulta de Clima</title>
 
 
     <!-- =====================================================
          ESTILOS
-         =====================================================
-
-         A ordem dos arquivos é importante:
-
-         1. base
-         2. layout
-         3. componentes
-         4. fundos climáticos
-         5. tema
-         6. responsividade
-         7. acessibilidade
-         8. style.css como ponto de entrada
-
-         Tablet e mobile ficam juntos em responsive.css.
          ===================================================== -->
 
     <link
         rel="stylesheet"
-        href="/assets/css/base.css"
+        href="assets/css/base.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/layout.css"
+        href="assets/css/layout.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/components.css"
+        href="assets/css/components.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/backgrounds.css"
+        href="assets/css/backgrounds.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/theme.css"
+        href="assets/css/theme.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/responsive.css"
+        href="assets/css/responsive.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/accessibility.css"
+        href="assets/css/accessibility.css"
     >
 
     <link
         rel="stylesheet"
-        href="/assets/css/style.css"
+        href="assets/css/style.css"
     >
 
 </head>
@@ -98,9 +129,17 @@
 
         <div class="day-background-layer"></div>
 
-        <div class="day-background-glow"></div>
-
-        <div class="day-background-particles"></div>
+        <!--
+            weather-canvas.js desenha aqui as animações
+            (chuva, neve, lua com fase real, raios, vento...).
+            Fica oculto por padrão e só aparece quando o
+            background.js dispara uma condição ativa
+            (ou seja, no modo claro, após uma pesquisa).
+        -->
+        <canvas
+            id="weather-canvas"
+            class="hidden"
+        ></canvas>
 
     </div>
 
@@ -168,6 +207,70 @@
                 </p>
 
             </header>
+
+
+            <!-- =================================================
+                 AVISO DE PRIVACIDADE E LICENCIAMENTO
+                 =================================================
+
+                 Exigido pela auditoria de Segurança/Privacidade
+                 e pela auditoria de Licenciamento/Conformidade
+                 (Tarefa 06). Informa de forma resumida como os
+                 dados digitados são usados e de onde vêm as
+                 informações climáticas exibidas.
+                 ================================================= -->
+
+            <aside
+                id="privacy-notice"
+                class="privacy-notice"
+                role="note"
+            >
+
+                <p>
+                    🔒 <strong>Privacidade:</strong>
+                    o nome da cidade que você digita é enviado
+                    apenas para a API pública
+                    <strong>Open-Meteo</strong> para localizar
+                    o clima — não coletamos, enviamos a
+                    terceiros nem armazenamos esse dado em
+                    nenhum servidor. Um cache é salvo
+                    temporariamente (10&nbsp;minutos) apenas
+                    no seu próprio navegador
+                    (<code>localStorage</code>).
+                </p>
+
+                <p>
+                    📄 <strong>Licenciamento:</strong>
+                    os dados meteorológicos são fornecidos
+                    pela
+                    <a
+                        href="https://open-meteo.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >Open-Meteo</a>
+                    sob licença
+                    <a
+                        href="https://creativecommons.org/licenses/by/4.0/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >CC BY 4.0</a>.
+                    Consulte o
+                    <code>NOTICE.md</code>
+                    e a
+                    <code>LICENSE</code>
+                    deste projeto para mais detalhes.
+                </p>
+
+                <button
+                    type="button"
+                    id="privacy-notice-dismiss"
+                    class="privacy-notice-dismiss"
+                    aria-label="Fechar aviso de privacidade e licenciamento"
+                >
+                    ✕
+                </button>
+
+            </aside>
 
 
             <!-- =================================================
@@ -267,19 +370,23 @@
 
 
                 <!-- =================================================
-                     LOCALIZAÇÃO
+                     TEMPERATURA
+                     =================================================
+
+                     Fica isolada da linha do ícone (flex-row),
+                     evitando que o ícone "empurre" o texto pra
+                     fora do centro verdadeiro do painel — antes
+                     ela dividia espaço com o ícone dentro de
+                     .weather-main, o que deixava a sensação de
+                     descentralização (o ícone tem largura fixa,
+                     então o conjunto ícone+texto não fica
+                     centralizado à mesma largura da página).
                      ================================================= -->
 
-                <header class="location-header">
-
-                    <h2 id="city-name"></h2>
-
-                    <p
-                        id="local-time"
-                        class="local-time"
-                    ></p>
-
-                </header>
+                <p
+                    id="temperature"
+                    class="temperature"
+                ></p>
 
 
                 <!-- =================================================
@@ -312,11 +419,6 @@
 
                             <p id="weather-description"></p>
 
-                            <p
-                                id="temperature"
-                                class="temperature"
-                            ></p>
-
                         </div>
 
                     </div>
@@ -330,7 +432,6 @@
                         class="weather-details"
                         aria-label="Detalhes do clima"
                     >
-
 
                         <div class="weather-detail">
 
@@ -400,6 +501,30 @@
 
 
                 <!-- =================================================
+                     LOCALIZAÇÃO
+                     =================================================
+
+                     Trocou de lugar com a temperatura: antes
+                     ficava no topo do painel, agora fica aqui —
+                     ambos os blocos continuam com texto simples,
+                     sem ícone ao lado, então os dois ficam
+                     verdadeiramente centralizados na largura do
+                     painel.
+                     ================================================= -->
+
+                <header class="location-header">
+
+                    <h2 id="city-name"></h2>
+
+                    <p
+                        id="local-time"
+                        class="local-time"
+                    ></p>
+
+                </header>
+
+
+                <!-- =================================================
                      ATUALIZAÇÃO
                      ================================================= -->
 
@@ -444,6 +569,13 @@
                     </div>
 
 
+                    <!--
+                        Todo o CSS responsivo (grid no desktop,
+                        scroll horizontal no mobile) é escrito
+                        para #forecast-container/.forecast-container.
+                        forecast.js já prioriza esse seletor.
+                    -->
+
                     <div
                         id="forecast-container"
                         class="forecast-container"
@@ -475,14 +607,45 @@
                     </div>
 
 
+                    <!--
+                        comparison.js procura especificamente
+                        por #comparison-list.
+                    -->
+
                     <div
-                        id="comparison-container"
-                        class="comparison-container"
+                        id="comparison-list"
+                        class="comparison-list"
                     ></div>
 
                 </section>
 
+
             </section>
+
+
+            <!-- =================================================
+                 RODAPÉ / CRÉDITOS
+                 ================================================= -->
+
+            <footer class="app-footer">
+
+                <p>
+                    Dados meteorológicos e de geocodificação
+                    fornecidos por
+                    <a
+                        href="https://open-meteo.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >Open-Meteo</a>
+                    (CC BY 4.0). Veja
+                    <code>LICENSE</code>
+                    e
+                    <code>NOTICE.md</code>
+                    para detalhes de licenciamento e
+                    atribuições de terceiros.
+                </p>
+
+            </footer>
 
         </main>
 
@@ -506,22 +669,23 @@
          JAVASCRIPT
          =====================================================
 
-         api.js é carregado primeiro porque é o controlador
-         principal da pesquisa e disponibiliza funções globais
-         utilizadas pelos demais módulos.
+         api.js permanece como ponto de entrada.
 
-         forecast.js disponibiliza window.buscarPrevisao e
-         window.exibirPrevisao.
+         Ele importa os demais módulos ES Module necessários
+         para a aplicação.
 
-         comparison.js utiliza os dados disponibilizados pelo
-         api.js para a comparação entre cidades.
+         Caminhos relativos garantem compatibilidade com:
+
+         - Live Server
+         - GitHub Pages
+         - Navegador
+
          ===================================================== -->
 
-    <script src="/assets/js/api.js"></script>
-
-    <script src="/assets/js/forecast.js"></script>
-
-    <script src="/assets/js/comparison.js"></script>
+    <script
+        type="module"
+        src="assets/js/api.js"
+    ></script>
 
 </body>
 
