@@ -1,0 +1,28 @@
+{
+  "name": "clima_api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinhovdp/projeto_clima.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dinhovdp/projeto_clima/issues"
+  },
+  "homepage": "https://github.com/dinhovdp/projeto_clima#readme",
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "@babel/preset-env": "^7.28.0"
+  }
+}

@@ -1,0 +1,374 @@
+/* =========================================================
+   CLIMA API
+   RESPONSIVE.CSS
+   RESPONSIVIDADE DA APLICAÇÃO
+   ========================================================= */
+
+
+/* =========================================================
+   TABLET
+   Até 700px
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    /* -----------------------------------------------------
+       BODY
+       ----------------------------------------------------- */
+
+    body {
+        padding: 15px;
+    }
+
+
+    /* -----------------------------------------------------
+       APLICAÇÃO
+       ----------------------------------------------------- */
+
+    .app {
+        max-width: 100%;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTROLE DE TEMA
+       ----------------------------------------------------- */
+
+    .theme-container {
+        justify-content: center;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTAINER PRINCIPAL
+       ----------------------------------------------------- */
+
+    .container {
+        padding: 24px 20px;
+    }
+
+
+    /* -----------------------------------------------------
+       PREVISÃO
+       ----------------------------------------------------- */
+
+    .forecast-container {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    /* -----------------------------------------------------
+       COMPARAÇÃO
+       ----------------------------------------------------- */
+
+    .comparison-container {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   Até 500px
+   ========================================================= */
+
+@media (max-width: 500px) {
+
+    /* -----------------------------------------------------
+       BODY
+       ----------------------------------------------------- */
+
+    body {
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        padding: 12px;
+    }
+
+
+    /* -----------------------------------------------------
+       APLICAÇÃO
+       ----------------------------------------------------- */
+
+    .app {
+        width: 100%;
+        margin-top: 4px;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTROLE DE TEMA
+       ----------------------------------------------------- */
+
+    .app-header {
+        margin-bottom: 10px;
+    }
+
+    .theme-container {
+        justify-content: center;
+    }
+
+    #theme-toggle {
+        width: 100%;
+        max-width: 220px;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTAINER PRINCIPAL
+       ----------------------------------------------------- */
+
+    .container {
+        width: 100%;
+        padding: 22px 16px;
+
+        border-radius: 15px;
+    }
+
+
+    /* -----------------------------------------------------
+       CABEÇALHO DO CLIMA
+       ----------------------------------------------------- */
+
+    .weather-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .weather-header p {
+        font-size: 0.84rem;
+    }
+
+
+    /* -----------------------------------------------------
+       FORMULÁRIO
+       ----------------------------------------------------- */
+
+    .weather-form {
+        gap: 9px;
+    }
+
+    #city-input {
+        min-height: 46px;
+    }
+
+
+    /* -----------------------------------------------------
+       CLIMA ATUAL
+       ----------------------------------------------------- */
+
+    .weather-main {
+        gap: 10px;
+    }
+
+    .weather-icon {
+        font-size: 2.6rem;
+    }
+
+    #temperature {
+        font-size: 2.3rem;
+    }
+
+
+    /* -----------------------------------------------------
+       DETALHES DO CLIMA
+       ----------------------------------------------------- */
+
+    .weather-details {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .weather-detail {
+        flex-direction: row;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 9px;
+
+        padding: 11px;
+    }
+
+    .weather-detail > span {
+        margin: 0;
+    }
+
+    .weather-detail > div {
+        text-align: left;
+    }
+
+
+    /* -----------------------------------------------------
+       PREVISÃO DE 7 DIAS
+       ----------------------------------------------------- */
+
+    .forecast-container {
+        display: flex;
+
+        width: 100%;
+        max-width: 100%;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding: 5px 2px 12px;
+
+        gap: 10px;
+
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+    }
+
+    .forecast-card {
+        flex:
+            0 0 145px;
+
+        width: 145px;
+        min-width: 145px;
+
+        scroll-snap-align: start;
+    }
+
+
+    /* -----------------------------------------------------
+       COMPARAÇÃO
+       ----------------------------------------------------- */
+
+    .comparison-container {
+        display: flex;
+
+        width: 100%;
+        max-width: 100%;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        gap: 10px;
+
+        padding: 5px 2px 12px;
+
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+    }
+
+    .comparison-card {
+        flex:
+            0 0 155px;
+
+        width: 155px;
+        min-width: 155px;
+
+        scroll-snap-align: start;
+    }
+
+
+    /* -----------------------------------------------------
+       BOTÃO DE COMPARAÇÃO
+       ----------------------------------------------------- */
+
+    .comparison-action {
+        margin-top: 18px;
+    }
+
+
+    /* -----------------------------------------------------
+       NOTIFICAÇÃO
+       ----------------------------------------------------- */
+
+    .weather-toast {
+        bottom: 18px;
+
+        max-width:
+            calc(100vw - 24px);
+
+        font-size: 0.82rem;
+
+        padding: 11px 16px;
+    }
+}
+
+
+/* =========================================================
+   CELULARES MUITO PEQUENOS
+   Até 350px
+   ========================================================= */
+
+@media (max-width: 350px) {
+
+    /* -----------------------------------------------------
+       BODY
+       ----------------------------------------------------- */
+
+    body {
+        padding: 8px;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTROLE DE TEMA
+       ----------------------------------------------------- */
+
+    #theme-toggle {
+        max-width: 100%;
+        font-size: 0.82rem;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTAINER PRINCIPAL
+       ----------------------------------------------------- */
+
+    .container {
+        padding: 20px 12px;
+    }
+
+
+    /* -----------------------------------------------------
+       CLIMA ATUAL
+       ----------------------------------------------------- */
+
+    .weather-main {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .weather-icon {
+        font-size: 2.4rem;
+    }
+
+    #temperature {
+        font-size: 2.1rem;
+    }
+
+
+    /* -----------------------------------------------------
+       PREVISÃO
+       ----------------------------------------------------- */
+
+    .forecast-card {
+        flex-basis: 135px;
+
+        width: 135px;
+        min-width: 135px;
+    }
+
+
+    /* -----------------------------------------------------
+       COMPARAÇÃO
+       ----------------------------------------------------- */
+
+    .comparison-card {
+        flex-basis: 145px;
+
+        width: 145px;
+        min-width: 145px;
+    }
+}

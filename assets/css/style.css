@@ -1,0 +1,27 @@
+/* =========================================================
+   CLIMA API
+   ARQUIVO PRINCIPAL DE ESTILOS
+   ========================================================= */
+
+/*
+   Este arquivo funciona apenas como ponto de entrada
+   para os demais módulos CSS.
+
+   Ordem de carregamento:
+
+   1. Base
+   2. Layout
+   3. Componentes
+   4. Fundos climáticos
+   5. Tema
+   6. Responsividade
+   7. Acessibilidade
+*/
+
+@import url("./base.css");
+@import url("./layout.css");
+@import url("./components.css");
+@import url("./backgrounds.css");
+@import url("./theme.css");
+@import url("./responsive.css");
+@import url("./accessibility.css");

@@ -1,0 +1,1068 @@
+/* =========================================================
+   THEME.CSS
+   TEMAS DA APLICAÇÃO
+   ========================================================= */
+
+
+/* =========================================================
+   MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) {
+    color: var(--text-light);
+}
+
+
+/* =========================================================
+   BACKGROUND BASE
+   ========================================================= */
+
+.day-background {
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: -10;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+    transition:
+        background 1.2s ease,
+        filter 1.2s ease;
+}
+
+
+/* =========================================================
+   CAMADAS DO BACKGROUND
+   ========================================================= */
+
+.day-background-layer,
+.day-background-glow,
+.day-background-particles {
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   FUNDO — MANHÃ
+   ========================================================= */
+
+body:not(.dark-mode).manha .day-background {
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffd89b 0%,
+            #87ceeb 48%,
+            #b8e7ff 100%
+        );
+}
+
+
+/* =========================================================
+   FUNDO — TARDE
+   ========================================================= */
+
+body:not(.dark-mode).tarde .day-background {
+
+    background:
+        linear-gradient(
+            135deg,
+            #65c7f7 0%,
+            #4fa8dc 50%,
+            #a7ddff 100%
+        );
+}
+
+
+/* =========================================================
+   FUNDO — NOITE
+   ========================================================= */
+
+body:not(.dark-mode).noite .day-background,
+body:not(.dark-mode).madrugada .day-background {
+
+    background:
+        linear-gradient(
+            135deg,
+            #182848 0%,
+            #304b72 55%,
+            #0f2027 100%
+        );
+}
+
+
+/* =========================================================
+   CLIMA — LIMPO
+   ========================================================= */
+
+body:not(.dark-mode).clima-limpo
+.day-background {
+
+    filter:
+        saturate(1.08);
+}
+
+
+/* =========================================================
+   CLIMA — PARCIALMENTE NUBLADO
+   ========================================================= */
+
+body:not(.dark-mode).clima-parcial
+.day-background {
+
+    filter:
+        saturate(0.92)
+        brightness(0.97);
+}
+
+
+/* =========================================================
+   CLIMA — NUBLADO
+   ========================================================= */
+
+body:not(.dark-mode).clima-nublado
+.day-background {
+
+    filter:
+        saturate(0.72)
+        brightness(0.86);
+}
+
+
+/* =========================================================
+   CLIMA — CHUVA
+   ========================================================= */
+
+body:not(.dark-mode).clima-chuva-leve
+.day-background {
+
+    filter:
+        saturate(0.8)
+        brightness(0.88);
+}
+
+body:not(.dark-mode).clima-chuva-forte
+.day-background {
+
+    filter:
+        saturate(0.68)
+        brightness(0.78);
+}
+
+
+/* =========================================================
+   CLIMA — NEVE
+   ========================================================= */
+
+body:not(.dark-mode).clima-neve
+.day-background {
+
+    filter:
+        saturate(0.55)
+        brightness(1.08);
+}
+
+
+/* =========================================================
+   CLIMA — TEMPESTADE
+   ========================================================= */
+
+body:not(.dark-mode).clima-tempestade
+.day-background,
+body:not(.dark-mode).clima-granizo
+.day-background {
+
+    filter:
+        saturate(0.45)
+        brightness(0.62);
+}
+
+
+/* =========================================================
+   NUVENS — PARCIAL
+   ========================================================= */
+
+body:not(.dark-mode).clima-parcial
+.day-background-layer {
+
+    background:
+
+        radial-gradient(
+            ellipse at 20% 25%,
+            rgba(255, 255, 255, 0.75) 0,
+            rgba(255, 255, 255, 0.42) 18%,
+            transparent 38%
+        ),
+
+        radial-gradient(
+            ellipse at 75% 20%,
+            rgba(255, 255, 255, 0.65) 0,
+            rgba(255, 255, 255, 0.35) 20%,
+            transparent 42%
+        );
+
+    animation:
+        clouds-drift
+        35s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/* =========================================================
+   NUVENS — NUBLADO
+   ========================================================= */
+
+body:not(.dark-mode).clima-nublado
+.day-background-layer {
+
+    background:
+
+        radial-gradient(
+            ellipse at 15% 25%,
+            rgba(255, 255, 255, 0.58),
+            transparent 38%
+        ),
+
+        radial-gradient(
+            ellipse at 70% 18%,
+            rgba(255, 255, 255, 0.48),
+            transparent 42%
+        ),
+
+        radial-gradient(
+            ellipse at 45% 70%,
+            rgba(210, 225, 235, 0.3),
+            transparent 45%
+        );
+
+    animation:
+        clouds-drift
+        28s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/* =========================================================
+   NUVENS — CHUVA
+   ========================================================= */
+
+body:not(.dark-mode).clima-chuva-leve
+.day-background-layer,
+body:not(.dark-mode).clima-chuva-forte
+.day-background-layer {
+
+    background:
+
+        radial-gradient(
+            ellipse at 15% 18%,
+            rgba(170, 190, 205, 0.62),
+            transparent 42%
+        ),
+
+        radial-gradient(
+            ellipse at 70% 20%,
+            rgba(145, 165, 180, 0.58),
+            transparent 45%
+        ),
+
+        linear-gradient(
+            180deg,
+            rgba(80, 100, 120, 0.12),
+            transparent 65%
+        );
+
+    animation:
+        clouds-drift
+        20s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/*
+   As partículas de chuva animadas (gotas caindo de verdade,
+   com respingo) agora são desenhadas pelo weather-canvas.js.
+   O antigo efeito plano via background-position foi removido
+   para não duplicar a animação.
+*/
+
+
+/* =========================================================
+   NEVE — CAMADA ATMOSFÉRICA
+   ========================================================= */
+
+body:not(.dark-mode).clima-neve
+.day-background-layer {
+
+    background:
+
+        radial-gradient(
+            ellipse at 20% 20%,
+            rgba(255, 255, 255, 0.75),
+            transparent 38%
+        ),
+
+        radial-gradient(
+            ellipse at 75% 30%,
+            rgba(240, 250, 255, 0.7),
+            transparent 42%
+        );
+}
+
+
+/*
+   Os flocos de neve com profundidade e deriva agora são
+   desenhados pelo weather-canvas.js.
+*/
+
+
+/* =========================================================
+   TEMPESTADE — CAMADA
+   ========================================================= */
+
+body:not(.dark-mode).clima-tempestade
+.day-background-layer,
+body:not(.dark-mode).clima-granizo
+.day-background-layer {
+
+    background:
+
+        radial-gradient(
+            ellipse at 50% 15%,
+            rgba(170, 185, 205, 0.3),
+            transparent 45%
+        ),
+
+        linear-gradient(
+            180deg,
+            rgba(20, 30, 45, 0.15),
+            rgba(5, 15, 25, 0.35)
+        );
+
+    animation:
+        storm-clouds
+        10s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/*
+   A chuva pesada da tempestade agora é desenhada pelo
+   weather-canvas.js, junto com o raio (bolt) real.
+*/
+
+
+/* =========================================================
+   TEMPESTADE — RELÂMPAGO
+   ========================================================= */
+
+body:not(.dark-mode).clima-tempestade
+.day-background-glow,
+body:not(.dark-mode).clima-granizo
+.day-background-glow {
+
+    background:
+        rgba(220, 235, 255, 0.28);
+
+    filter:
+        blur(60px);
+
+    opacity: 0;
+
+    animation:
+        lightning-flash
+        7s
+        infinite;
+}
+
+
+/* =========================================================
+   FUNDO LIMPO — ILUMINAÇÃO
+   ========================================================= */
+
+body:not(.dark-mode).clima-limpo
+.day-background-glow {
+
+    background:
+        radial-gradient(
+            circle at 75% 20%,
+            rgba(255, 240, 170, 0.45),
+            transparent 30%
+        );
+
+    animation:
+        glow-float
+        16s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/* =========================================================
+   CONTROLE DE TEMA
+   ========================================================= */
+
+#theme-toggle {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    min-height: 42px;
+
+    padding:
+        9px 14px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.5);
+
+    border-radius:
+        var(--radius-small);
+
+    background:
+        rgba(255, 255, 255, 0.7);
+
+    color:
+        #17202a;
+
+    backdrop-filter:
+        blur(10px);
+
+    -webkit-backdrop-filter:
+        blur(10px);
+
+    box-shadow:
+        0 4px 14px
+        rgba(0, 0, 0, 0.08);
+
+    cursor:
+        pointer;
+
+    font-size:
+        0.9rem;
+
+    font-weight:
+        700;
+
+    transition:
+        background var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast),
+        border-color var(--transition-fast);
+}
+
+
+#theme-toggle:hover {
+
+    background:
+        rgba(255, 255, 255, 0.95);
+
+    transform:
+        translateY(-1px);
+}
+
+
+#theme-toggle:active {
+
+    transform:
+        translateY(0);
+}
+
+
+/* =========================================================
+   CONTAINER — MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) .container {
+
+    background:
+        rgba(255, 255, 255, 0.3);
+
+    border-color:
+        rgba(255, 255, 255, 0.45);
+
+    box-shadow:
+        0 15px 40px
+        rgba(0, 0, 0, 0.14);
+}
+
+
+/* =========================================================
+   CARDS — MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) .weather-detail,
+body:not(.dark-mode) .forecast-card,
+body:not(.dark-mode) .comparison-card {
+
+    background:
+        rgba(255, 255, 255, 0.24);
+
+    border-color:
+        rgba(255, 255, 255, 0.32);
+}
+
+
+/* =========================================================
+   HOVER — MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) .forecast-card:hover,
+body:not(.dark-mode) .comparison-card:hover {
+
+    background:
+        rgba(255, 255, 255, 0.35);
+}
+
+
+body:not(.dark-mode) .weather-detail:hover {
+
+    background:
+        rgba(255, 255, 255, 0.32);
+}
+
+
+/* =========================================================
+   INPUT — MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) #city-input {
+
+    background:
+        rgba(255, 255, 255, 0.75);
+
+    border-color:
+        rgba(0, 0, 0, 0.18);
+
+    color:
+        #17202a;
+}
+
+
+body:not(.dark-mode) #city-input::placeholder {
+
+    color:
+        rgba(23, 32, 42, 0.6);
+}
+
+
+body:not(.dark-mode) #city-input:focus {
+
+    background:
+        rgba(255, 255, 255, 0.95);
+}
+
+
+/* =========================================================
+   ATUALIZAÇÃO — MODO CLARO
+   ========================================================= */
+
+body:not(.dark-mode) .updated-at {
+
+    color:
+        rgba(23, 32, 42, 0.65);
+}
+
+
+/* =========================================================
+   MODO ESCURO
+   ========================================================= */
+
+body.dark-mode {
+
+    color:
+        var(--text-dark);
+}
+
+
+/* =========================================================
+   BACKGROUND — MODO ESCURO
+   =========================================================
+
+   IMPORTANTE:
+
+   O clima NÃO modifica o background no modo escuro.
+
+   Portanto:
+
+   clima-limpo
+   clima-parcial
+   clima-nublado
+   clima-chuva
+   clima-neve
+   clima-tempestade
+
+   são ignorados visualmente aqui.
+   ========================================================= */
+
+body.dark-mode .day-background {
+
+    background:
+        linear-gradient(
+            135deg,
+            #07111d,
+            #0d2034,
+            #152d47
+        );
+
+    filter:
+        none;
+}
+
+
+/* =========================================================
+   CAMADA ATMOSFÉRICA — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .day-background-layer {
+
+    background:
+
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(75, 130, 190, 0.16),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 80% 80%,
+            rgba(120, 150, 210, 0.1),
+            transparent 35%
+        );
+
+    animation:
+        background-drift
+        24s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/* =========================================================
+   ILUMINAÇÃO — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .day-background-glow {
+
+    width:
+        220px;
+
+    height:
+        220px;
+
+    top:
+        10%;
+
+    right:
+        12%;
+
+    background:
+        rgba(100, 150, 220, 0.12);
+
+    filter:
+        blur(35px);
+
+    opacity:
+        0.7;
+
+    animation:
+        glow-float
+        16s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+/* =========================================================
+   PARTÍCULAS — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .day-background-particles {
+
+    opacity:
+        0.25;
+
+    background-image:
+
+        radial-gradient(
+            circle,
+            rgba(180, 210, 255, 0.35) 1px,
+            transparent 1.5px
+        );
+
+    background-size:
+        90px 90px;
+
+    animation:
+        particles-drift
+        35s
+        linear
+        infinite;
+}
+
+
+/* =========================================================
+   CONTROLE DE TEMA — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode #theme-toggle {
+
+    background:
+        rgba(20, 45, 70, 0.82);
+
+    color:
+        #ffffff;
+
+    border-color:
+        rgba(255, 255, 255, 0.18);
+}
+
+
+body.dark-mode #theme-toggle:hover {
+
+    background:
+        rgba(30, 60, 90, 0.95);
+}
+
+
+/* =========================================================
+   CONTAINER — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .container {
+
+    background:
+        rgba(15, 37, 58, 0.72);
+
+    border-color:
+        rgba(255, 255, 255, 0.15);
+
+    box-shadow:
+        0 15px 40px
+        rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================================================
+   INPUT — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode #city-input {
+
+    background:
+        rgba(8, 24, 39, 0.8);
+
+    border-color:
+        rgba(255, 255, 255, 0.2);
+
+    color:
+        #ffffff;
+}
+
+
+body.dark-mode #city-input::placeholder {
+
+    color:
+        rgba(255, 255, 255, 0.55);
+}
+
+
+body.dark-mode #city-input:focus {
+
+    background:
+        rgba(8, 24, 39, 0.95);
+}
+
+
+/* =========================================================
+   CARDS — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .weather-detail,
+body.dark-mode .forecast-card,
+body.dark-mode .comparison-card {
+
+    background:
+        rgba(16, 38, 61, 0.78);
+
+    border-color:
+        rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================================================
+   HOVER — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .weather-detail:hover,
+body.dark-mode .forecast-card:hover,
+body.dark-mode .comparison-card:hover {
+
+    background:
+        rgba(25, 55, 82, 0.9);
+}
+
+
+/* =========================================================
+   TEXTOS — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .updated-at {
+
+    color:
+        #b8c7d9;
+}
+
+
+/* =========================================================
+   COMPARAÇÃO — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .comparison-section {
+
+    border-color:
+        rgba(255, 255, 255, 0.15);
+}
+
+
+body.dark-mode .comparison-details {
+
+    border-color:
+        rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================================================
+   ERRO — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .erro {
+
+    background:
+        rgba(255, 100, 90, 0.12);
+
+    border-color:
+        rgba(255, 100, 90, 0.25);
+
+    color:
+        #ffaaa3;
+}
+
+
+/* =========================================================
+   BARRAS DE ROLAGEM — MODO ESCURO
+   ========================================================= */
+
+body.dark-mode .forecast-container,
+body.dark-mode .comparison-container {
+
+    scrollbar-color:
+        rgba(100, 135, 170, 0.7)
+        transparent;
+}
+
+
+body.dark-mode
+.forecast-container::-webkit-scrollbar-thumb,
+body.dark-mode
+.comparison-container::-webkit-scrollbar-thumb {
+
+    background:
+        rgba(100, 135, 170, 0.7);
+}
+
+
+/* =========================================================
+   ANIMAÇÕES
+   ========================================================= */
+
+@keyframes clouds-drift {
+
+    from {
+
+        transform:
+            translateX(-2%)
+            scale(1.02);
+    }
+
+    to {
+
+        transform:
+            translateX(2%)
+            scale(1.05);
+    }
+}
+
+
+@keyframes rain-fall {
+
+    from {
+
+        background-position:
+            0 -45px;
+    }
+
+    to {
+
+        background-position:
+            -45px 45px;
+    }
+}
+
+
+@keyframes snow-fall {
+
+    from {
+
+        background-position:
+            0 -42px;
+    }
+
+    to {
+
+        background-position:
+            28px 42px;
+    }
+}
+
+
+@keyframes storm-clouds {
+
+    from {
+
+        transform:
+            translateX(-1%)
+            scale(1.02);
+    }
+
+    to {
+
+        transform:
+            translateX(2%)
+            scale(1.06);
+    }
+}
+
+
+@keyframes lightning-flash {
+
+    0%,
+    85%,
+    100% {
+
+        opacity:
+            0;
+    }
+
+    88% {
+
+        opacity:
+            0.25;
+    }
+
+    89% {
+
+        opacity:
+            0.05;
+    }
+
+    91% {
+
+        opacity:
+            0.3;
+    }
+
+    93% {
+
+        opacity:
+            0;
+    }
+}
+
+
+@keyframes glow-float {
+
+    from {
+
+        transform:
+            translate3d(
+                -10px,
+                -5px,
+                0
+            );
+    }
+
+    to {
+
+        transform:
+            translate3d(
+                10px,
+                8px,
+                0
+            );
+    }
+}
+
+
+@keyframes background-drift {
+
+    from {
+
+        transform:
+            translate3d(
+                -1%,
+                -1%,
+                0
+            );
+    }
+
+    to {
+
+        transform:
+            translate3d(
+                1%,
+                1%,
+                0
+            );
+    }
+}
+
+
+@keyframes particles-drift {
+
+    from {
+
+        background-position:
+            0 0;
+    }
+
+    to {
+
+        background-position:
+            90px 90px;
+    }
+} 

@@ -1,0 +1,84 @@
+/* =========================================================
+   CLIMA API
+   BACKGROUNDS — CANVAS DE ANIMAÇÃO
+   =========================================================
+
+   IMPORTANTE — DIVISÃO DE RESPONSABILIDADES:
+
+   - theme.css já define as cores de fundo (gradientes) e os
+     filtros de humor (saturação/brilho) para cada combinação
+     de clima + período do dia, usando as classes aplicadas
+     por background.js:
+
+         clima-limpo, clima-parcial, clima-nublado,
+         clima-chuva-leve, clima-chuva-forte,
+         clima-tempestade, clima-granizo, clima-neve
+
+         manha, tarde, noite, madrugada
+
+   - Este arquivo cuida apenas do <canvas id="weather-canvas">,
+     onde o weather-canvas.js desenha o movimento real:
+     chuva caindo, flocos de neve, granizo, raios, lua com
+     fase e estrelas, sol com raios, vento com folhas.
+
+   Isso evita duplicar animação (uma via CSS, outra via
+   canvas) e mantém uma única fonte de verdade para cada
+   parte do efeito visual.
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   CANVAS DE ANIMAÇÃO
+   --------------------------------------------------------- */
+
+#weather-canvas {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    /* Fica acima do gradiente e das camadas de nuvem do
+       theme.css, mas atrás de todo o conteúdo da aplicação
+       (que tem seu próprio z-index positivo). */
+    z-index: 1;
+
+    pointer-events: none;
+}
+
+#weather-canvas.hidden {
+    display: none;
+}
+
+
+/* ---------------------------------------------------------
+   MODO ESCURO
+   ---------------------------------------------------------
+
+   O canvas nunca é exibido no modo escuro. background.js já
+   garante isso via evento (ativo:false), mas a regra de CSS
+   fica aqui como segunda camada de proteção.
+   --------------------------------------------------------- */
+
+body.dark-mode #weather-canvas {
+    display: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   ACESSIBILIDADE
+   ---------------------------------------------------------
+
+   Com prefers-reduced-motion, o weather-canvas.js já desenha
+   apenas um quadro estático (sem requestAnimationFrame
+   contínuo). Esta regra é uma garantia visual adicional.
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    #weather-canvas {
+        opacity: 0.9;
+    }
+}
